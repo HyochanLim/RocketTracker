@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg-info/
+*.egg
+*.env
+.env
+.venv
+venv/
+ENV/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data
+*.csv
+*.tsv
+*.log
+data/rawdata/
+data/modifieddata/
+
+# Node
+node_modules/
+
+# Others
+*.swp
+*.bak
+*.tmp
+
+# Ignore public build outputs
+public/*.js
+public/*.map
