@@ -24,8 +24,8 @@ Thumbs.db
 *.csv
 *.tsv
 *.log
-data/rawdata/
-data/modifieddata/
+# data/rawdata/
+# data/modifieddata/
 
 # Node
 node_modules/
