@@ -1,5 +1,17 @@
 # Python
 __pycache__/
+logic/3Dvisualizer/
+public/
+views/
+logic/filtering/__pycache__/
+logic/filtering/README.md
+data/modifieddata/
+logic/3Dvisualizer/
+public/
+views/
+logic/filtering/__pycache__/
+logic/filtering/README.md
+data/modifieddata/
 *.py[cod]
 *.pyo
 *.pyd
