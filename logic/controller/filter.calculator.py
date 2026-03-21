@@ -35,3 +35,5 @@ def raw_data_converter(raw_data):
 raw_converted_data = raw_data_converter(raw_data)
 
 filtered_data = MinimalNavFilter().process_records(raw_converted_data)
+
+json.dump(filtered_data, open('data/filtereddata/filtered_data.json', 'w'), ensure_ascii=False, indent=2)
