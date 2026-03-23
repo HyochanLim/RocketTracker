@@ -93,10 +93,8 @@ a {
 }
 
 .container {
-  display: flex;
   width: min(1024px, 92%);
   margin: 0 auto;
-  justify-content: center;
 }
 
 .site-header {
@@ -402,6 +400,11 @@ a {
   box-shadow: 0 18px 40px rgba(2, 4, 11, 0.35);
 }
 
+.hero-card,
+.auth-card {
+  margin-inline: auto;
+}
+
 .hero-card h1 {
   margin-top: 0.6rem;
   margin-bottom: 0.8rem;
@@ -474,6 +477,8 @@ textarea {
 }
 
 .auth-layout {
+  display: flex;
+  justify-content: center;
   padding: 3rem 0;
 }
 
@@ -541,7 +546,7 @@ input:focus {
 }
 
 .page-panel {
-  margin-top: 3rem;
+  margin: 3rem auto 0;
 }
 
 .profile-description {
@@ -577,6 +582,11 @@ input:focus {
 
 .profile-summary-info p {
   margin: 0.15rem 0;
+}
+
+.profile-nickname {
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .profile-edit-form {
