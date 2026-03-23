@@ -2,7 +2,7 @@ const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
 
-const flightDir = path.join(__dirname, "..", "data", "uploads", "flight");
+const flightDir = path.join(__dirname, "..", "data", "storage", "raw_uploads");
 fs.mkdirSync(flightDir, { recursive: true });
 
 const storage = multer.diskStorage({

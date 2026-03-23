@@ -22,6 +22,13 @@ class FlightFile {
     });
   }
 
+  static findByIdForUser(userId, fileId) {
+    return db.getDb().collection("flight_files").findOne({
+      _id: new mongodb.ObjectId(fileId),
+      userId: new mongodb.ObjectId(userId),
+    });
+  }
+
 }
 
 module.exports = FlightFile;

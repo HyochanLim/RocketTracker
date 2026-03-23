@@ -12,12 +12,16 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+config/ai-agent.local.js
+config/ai-agent.local.js
 
 # Uploaded user files (optional: keep folder, ignore contents)
 uploads/avatars/*
 !uploads/avatars/.gitkeep
-data/uploads/flight/*
-!data/uploads/flight/.gitkeep
+data/storage/raw_uploads/*
+!data/storage/raw_uploads/.gitkeep
+data/storage/parsed_json/*
+!data/storage/parsed_json/.gitkeep
 
 # Python cache / virtual env
 __pycache__/
