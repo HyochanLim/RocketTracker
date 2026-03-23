@@ -1,6 +1,38 @@
+.tracker-page {
+  width: 100%;
+}
+
 .tracker-page .tracker-upload-form {
   display: grid;
   gap: 0.6rem;
+}
+
+.tracker-page .tracker-upload-input {
+  padding: 0.4rem;
+  background: rgba(8, 30, 37, 0.86);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.tracker-page .tracker-upload-input::file-selector-button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: linear-gradient(140deg, var(--accent), var(--accent-soft));
+  color: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.8rem;
+  margin-right: 0.7rem;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.16s ease;
+}
+
+.tracker-page .tracker-upload-input::file-selector-button:hover {
+  filter: brightness(1.05);
+}
+
+.tracker-page .tracker-upload-input::file-selector-button:active {
+  transform: translateY(1px);
 }
 
 .tracker-page .tracker-saved-section {
@@ -9,6 +41,16 @@
 
 .tracker-page .tracker-saved-title {
   margin: 0 0 0.6rem;
+}
+
+.tracker-page .tracker-select {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: rgba(8, 30, 37, 0.86);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.7rem;
 }
 
 .tracker-page .tracker-saved-list {
@@ -22,4 +64,8 @@
 
 .tracker-page .tracker-file-meta {
   color: var(--muted);
+}
+
+.tracker-page .tracker-analyze-wrap {
+  margin-top: 1rem;
 }

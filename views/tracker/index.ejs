@@ -6,7 +6,6 @@
     <main class="container page-panel">
       <div class="tracker-page">
         <h1>Tracker Dashboard</h1>
-        <p>Upload flight data once; we save file path in MongoDB so you can reuse it later.</p>
         <% if (message && message.text) { %>
           <p class="message <%= message.type === 'error' ? 'message-error' : 'message-success' %>">
             <%= message.text %>
@@ -14,8 +13,9 @@
         <% } %>
         <form action="/tracker/upload" method="post" enctype="multipart/form-data" class="tracker-upload-form">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-          <input type="file" name="file" accept=".json,.csv" required />
-          <button type="submit" class="button button-primary">Upload</button>
+          <label for="tracker-upload-file">Upload New Flight File</label>
+          <input id="tracker-upload-file" class="tracker-upload-input" type="file" name="file" accept=".json,.csv" required />
+          <button type="submit" class="button button-primary">Analyze</button>
         </form>
 
         <section class="tracker-saved-section">
@@ -23,6 +23,14 @@
           <% if (!files || files.length === 0) { %>
             <p class="profile-description">No saved files yet.</p>
           <% } else { %>
+            <label for="saved-flight-file">Use Previously Uploaded Data</label>
+            <select id="saved-flight-file" class="tracker-select">
+              <option value="">Select saved data</option>
+              <% files.forEach(function (f) { %>
+                <option value="<%= f._id %>"><%= f.originalName %> (<%= f.size %> bytes)</option>
+              <% }) %>
+            </select>
+
             <ul class="tracker-saved-list">
               <% files.forEach(function (f) { %>
                 <li class="tracker-saved-item">
@@ -34,7 +42,30 @@
             </ul>
           <% } %>
         </section>
+
+        <div class="tracker-analyze-wrap" id="tracker-analyze-wrap" hidden>
+          <button type="button" class="button button-secondary">Analyze</button>
+        </div>
       </div>
+
+      <script>
+        (function () {
+          var fileInput = document.getElementById("tracker-upload-file");
+          var savedSelect = document.getElementById("saved-flight-file");
+          var analyzeWrap = document.getElementById("tracker-analyze-wrap");
+          if (!analyzeWrap) return;
+
+          function updateAnalyzeButtonVisibility() {
+            var hasUpload = fileInput && fileInput.files && fileInput.files.length > 0;
+            var hasSaved = savedSelect && savedSelect.value && savedSelect.value.trim() !== "";
+            analyzeWrap.hidden = !(hasUpload || hasSaved);
+          }
+
+          if (fileInput) fileInput.addEventListener("change", updateAnalyzeButtonVisibility);
+          if (savedSelect) savedSelect.addEventListener("change", updateAnalyzeButtonVisibility);
+          updateAnalyzeButtonVisibility();
+        })();
+      </script>
     </main>
   </body>
 </html>

@@ -25,10 +25,6 @@
               alt="Current profile avatar"
             />
           </div>
-          <div class="profile-summary-info">
-            <p><strong>Display name:</strong> <span id="profile-display-name"><%= userData.displayName || "User" %></span></p>
-            <p><strong>Email:</strong> <span id="profile-email"><%= userData.email || "" %></span></p>
-          </div>
         </div>
 
         <div class="profile-action-row">
@@ -74,8 +70,6 @@
             var form = document.querySelector(".profile-edit-form");
             var message = document.getElementById("profile-message");
             var avatarPreview = document.getElementById("profile-avatar-preview");
-            var displayNameText = document.getElementById("profile-display-name");
-            var emailText = document.getElementById("profile-email");
             var avatarInput = document.getElementById("avatar-image");
             var avatarFileName = document.getElementById("avatar-file-name");
             if (!toggleButton || !form) return;
@@ -131,8 +125,6 @@
                   return;
                 }
 
-                displayNameText.textContent = data.user.displayName || "User";
-                emailText.textContent = data.user.email || "";
                 if (data.user.imageUrl) avatarPreview.src = data.user.imageUrl;
                 var headerName = document.querySelector(".profile-trigger .profile-name");
                 var headerAvatar = document.querySelector(".profile-trigger .profile-avatar");
