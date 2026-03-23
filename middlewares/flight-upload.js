@@ -18,8 +18,14 @@ const storage = multer.diskStorage({
   },
 });
 
-const allowedTypes = new Set(["text/csv", "application/json", "text/plain"]);
-const allowedExt = new Set([".csv", ".json"]);
+const allowedTypes = new Set([
+  "text/csv",
+  "application/json",
+  "text/plain",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+const allowedExt = new Set([".csv", ".json", ".xls", ".xlsx"]);
 
 const uploadFlightFile = multer({
   storage,
@@ -27,7 +33,7 @@ const uploadFlightFile = multer({
   fileFilter: function (req, file, cb) {
     const ext = path.extname(file.originalname || "").toLowerCase();
     if (allowedExt.has(ext) || allowedTypes.has(file.mimetype)) return cb(null, true);
-    req.fileValidationError = "Only .csv and .json flight data files are allowed.";
+    req.fileValidationError = "Only .csv, .json, .xls, and .xlsx flight data files are allowed.";
     cb(null, false);
   },
 });

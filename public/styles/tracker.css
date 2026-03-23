@@ -55,11 +55,15 @@
 
 .tracker-page .tracker-saved-list {
   margin: 0;
-  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.45rem;
 }
 
 .tracker-page .tracker-saved-item {
-  margin-bottom: 0.45rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(114, 161, 170, 0.25);
+  border-radius: 10px;
+  background: rgba(8, 30, 37, 0.45);
 }
 
 .tracker-page .tracker-file-meta {

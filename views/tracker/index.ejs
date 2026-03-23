@@ -14,7 +14,7 @@
         <form action="/tracker/upload" method="post" enctype="multipart/form-data" class="tracker-upload-form">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
           <label for="tracker-upload-file">Upload New Flight File</label>
-          <input id="tracker-upload-file" class="tracker-upload-input" type="file" name="file" accept=".json,.csv" required />
+          <input id="tracker-upload-file" class="tracker-upload-input" type="file" name="file" accept=".json,.csv,.xls,.xlsx" required />
           <button type="submit" class="button button-primary">Analyze</button>
         </form>
 
@@ -31,15 +31,15 @@
               <% }) %>
             </select>
 
-            <ul class="tracker-saved-list">
+            <div class="tracker-saved-list">
               <% files.forEach(function (f) { %>
-                <li class="tracker-saved-item">
+                <div class="tracker-saved-item">
                   <strong><%= f.originalName %></strong>
                   <br />
                   <small class="tracker-file-meta">Path: <%= f.storedPath %> | Size: <%= f.size %> bytes</small>
-                </li>
+                </div>
               <% }) %>
-            </ul>
+            </div>
           <% } %>
         </section>
 
