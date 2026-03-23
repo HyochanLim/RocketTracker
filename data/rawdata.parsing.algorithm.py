@@ -5,9 +5,17 @@ def parse_and_save_raw(input_path, output_path):
     # CSV 헤더 파싱 및 데이터 매핑
     parsed_data = []
     with open(input_path, 'r', encoding='utf-8') as f:
-        header = f.readline().strip().split(',')
+        raw_header = [h.strip() for h in f.readline().strip().split(',')]
+        # Duplicate header names are disambiguated with suffixes (e.g. altitude, altitude.1).
+        seen = {}
+        header = []
+        for name in raw_header:
+            count = seen.get(name, 0)
+            header.append(name if count == 0 else f"{name}.{count}")
+            seen[name] = count + 1
+
         for line in f:
-            values = line.strip().split(',')
+            values = [v.strip() for v in line.strip().split(',')]
             if len(values) != len(header):
                 continue
             row = {}
@@ -30,6 +38,6 @@ def parse_and_save_raw(input_path, output_path):
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    input_file = os.path.join(base_dir, 'data', 'rawdata', 'FC1_DATA_LOG05.csv')
-    output_file = os.path.join(base_dir, 'data', 'rawdata', 'FC1_DATA_LOG05.json')
+    input_file = os.path.join(base_dir, 'data', 'rawdata', '2025-02-23-serial-10970-flight-0000-via-12064.csv')
+    output_file = os.path.join(base_dir, 'data', 'rawdata', '2025-02-23-serial-10970-flight-0000-via-12064.json')
     parse_and_save_raw(input_file, output_file)

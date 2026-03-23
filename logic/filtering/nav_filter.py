@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from math import cos, radians, sin
+from math import atan2, cos, hypot, radians, sin
 from typing import Dict, Iterable, List, Optional
 
 import numpy as np
@@ -21,10 +21,25 @@ class FilterConfig:
 
     # Measurement noise
     gps_pos_noise: float = 1.2
-    gps_vel_noise: float = 0.7
+    # Horizontal GPS speed (TeleMega `speed` + bearing); keep looser than raw pos-diff.
+    gps_vel_noise: float = 8.0
     baro_pos_noise: float = 1.0
 
     innovation_gate_sigma: float = 5.0
+    gps_pos_gate_sigma: float = 5.0
+    # Allow large corrections when IMU velocity has drifted far from TeleMega ground speed.
+    gps_vel_gate_sigma: float = 40.0
+    baro_gate_sigma: float = 4.0
+    max_hdop: float = 4.0
+
+    # GPS horizontal velocity from TeleMega speed + track from successive fixes
+    gps_vel_dt_min: float = 0.05
+    gps_vel_dt_max: float = 5.0
+    gps_vel_min_ground_m: float = 0.08
+    zupt_speed_threshold: float = 8.0
+    zupt_vel_var: float = 0.15**2
+    # Direct blend of horizontal velocity toward TeleMega (avoids bad coupling into attitude).
+    gps_speed_blend: float = 0.45
 
 
 class MinimalNavFilter:
@@ -65,6 +80,9 @@ class MinimalNavFilter:
         self.last_gps_time: Optional[float] = None
         self.last_linear_accel_world = np.zeros(3, dtype=float)
 
+        self._gps_ne_prev: Optional[tuple[float, float, float]] = None
+        self._gps_track_rad: Optional[float] = None
+
     def process_sample(self, sample: Dict[str, float]) -> Dict[str, object]:
         t = float(sample.get("time", 0.0))
         dt = self._compute_dt(t)
@@ -92,15 +110,17 @@ class MinimalNavFilter:
         if self._has_valid_gps(sample):
             gps_pos_world = self._gps_to_world(sample)
             self._update_gps_pos(gps_pos_world)
-            self._update_gps_vel(gps_pos_world, t)
+            self._update_gps_vel_telemega(sample, gps_pos_world, t)
 
-        if "altitude" in sample:
+        baro_alt = _safe_float(sample.get("baro_altitude", sample.get("altitude")))
+        if baro_alt is not None:
             try:
-                baro_alt = float(sample["altitude"])
                 if np.isfinite(baro_alt):
                     self._update_baro_height(baro_alt)
             except (TypeError, ValueError):
                 pass
+
+        self._maybe_zero_velocity(sample)
 
         rot = quat_to_rotmat(self.q)
         accel_body_linear = rot.T @ self.last_linear_accel_world
@@ -164,20 +184,69 @@ class MinimalNavFilter:
         for axis in range(3):
             h = np.zeros((1, 15), dtype=float)
             h[0, axis] = 1.0
-            self._measurement_update(np.array([gps_pos_world[axis]], dtype=float), h, self.cfg.gps_pos_noise**2)
+            self._measurement_update(
+                np.array([gps_pos_world[axis]], dtype=float),
+                h,
+                self.cfg.gps_pos_noise**2,
+                self.cfg.gps_pos_gate_sigma,
+            )
 
-    def _update_gps_vel(self, gps_pos_world: np.ndarray, t: float) -> None:
-        if self.last_gps_pos_world is not None and self.last_gps_time is not None:
-            dt = t - self.last_gps_time
-            if dt > 1e-3:
-                gps_vel = (gps_pos_world - self.last_gps_pos_world) / dt
-                for axis in range(3):
-                    h = np.zeros((1, 15), dtype=float)
-                    h[0, 3 + axis] = 1.0
-                    self._measurement_update(np.array([gps_vel[axis]], dtype=float), h, self.cfg.gps_vel_noise**2)
+    def _update_gps_vel_telemega(self, sample: Dict[str, float], gps_pos_world: np.ndarray, t: float) -> None:
+        """
+        TeleMega logs ground speed but usually no course. Raw 3D position differencing at high rate
+        blows up vertical velocity (noisy GPS alt) and corrupts the state. We use:
+        - horizontal speed magnitude: abs(log speed) when present, else horizontal displacement / dt
+        - bearing: from successive horizontal NE fixes when movement is large enough
+        We do not inject vertical velocity from GPS position differencing.
+        """
+        east = float(gps_pos_world[1])
+        north = float(gps_pos_world[2])
+        spd_raw = _safe_float(sample.get("speed"))
+        v_mag = abs(spd_raw) if spd_raw is not None else None
 
+        if self._gps_ne_prev is not None:
+            n0, e0, t0 = self._gps_ne_prev
+            dt = t - t0
+            if self.cfg.gps_vel_dt_min < dt < self.cfg.gps_vel_dt_max:
+                dn = north - n0
+                de = east - e0
+                dist = hypot(dn, de)
+                if dist >= self.cfg.gps_vel_min_ground_m:
+                    self._gps_track_rad = atan2(de, dn)
+                if self._gps_track_rad is not None:
+                    if v_mag is None:
+                        v_mag = dist / dt if dt > 1e-6 else None
+                    if v_mag is not None:
+                        tr = self._gps_track_rad
+                        v_east = v_mag * sin(tr)
+                        v_north = v_mag * cos(tr)
+                        if v_mag < self.cfg.zupt_speed_threshold:
+                            self.vel[0] = 0.0
+                            self.vel[1] = v_east
+                            self.vel[2] = v_north
+                        else:
+                            a = self.cfg.gps_speed_blend
+                            self.vel[1] = (1.0 - a) * self.vel[1] + a * v_east
+                            self.vel[2] = (1.0 - a) * self.vel[2] + a * v_north
+
+        self._gps_ne_prev = (north, east, t)
         self.last_gps_pos_world = gps_pos_world.copy()
         self.last_gps_time = t
+
+    def _maybe_zero_velocity(self, sample: Dict[str, float]) -> None:
+        state = str(sample.get("state_name", "")).strip().lower()
+        if state != "landed":
+            return
+        for axis in range(3):
+            h = np.zeros((1, 15), dtype=float)
+            h[0, 3 + axis] = 1.0
+            self._measurement_update(
+                np.array([0.0], dtype=float),
+                h,
+                self.cfg.zupt_vel_var,
+                self.cfg.gps_vel_gate_sigma,
+                skip_gate=True,
+            )
 
     def _update_baro_height(self, baro_alt: float) -> None:
         if self.ref_alt is None:
@@ -186,9 +255,21 @@ class MinimalNavFilter:
 
         h = np.zeros((1, 15), dtype=float)
         h[0, 0] = 1.0
-        self._measurement_update(np.array([z_x], dtype=float), h, self.cfg.baro_pos_noise**2)
+        self._measurement_update(
+            np.array([z_x], dtype=float),
+            h,
+            self.cfg.baro_pos_noise**2,
+            self.cfg.baro_gate_sigma,
+        )
 
-    def _measurement_update(self, z: np.ndarray, h: np.ndarray, r_scalar: float) -> None:
+    def _measurement_update(
+        self,
+        z: np.ndarray,
+        h: np.ndarray,
+        r_scalar: float,
+        gate_sigma: Optional[float] = None,
+        skip_gate: bool = False,
+    ) -> None:
         x_err = np.zeros(15, dtype=float)
         x_err[self.IDX_POS] = self.pos
         x_err[self.IDX_VEL] = self.vel
@@ -199,9 +280,11 @@ class MinimalNavFilter:
         if s_val <= 1e-12:
             return
 
-        gate = self.cfg.innovation_gate_sigma * np.sqrt(s_val)
-        if abs(float(y[0])) > gate:
-            return
+        if not skip_gate:
+            effective_gate_sigma = self.cfg.innovation_gate_sigma if gate_sigma is None else gate_sigma
+            gate = effective_gate_sigma * np.sqrt(s_val)
+            if abs(float(y[0])) > gate:
+                return
 
         k = self.P @ h.T / s_val
         dx = (k.flatten() * float(y[0]))
@@ -223,6 +306,9 @@ class MinimalNavFilter:
         nsat = int(sample.get("nsat", 0) or 0)
         if nsat < 5:
             return False
+        hdop = _safe_float(sample.get("hdop"))
+        if hdop is not None and hdop > self.cfg.max_hdop:
+            return False
 
         lat = sample.get("latitude")
         lon = sample.get("longitude")
@@ -240,7 +326,7 @@ class MinimalNavFilter:
     def _gps_to_world(self, sample: Dict[str, float]) -> np.ndarray:
         lat = float(sample["latitude"])
         lon = float(sample["longitude"])
-        alt = float(sample.get("altitude.1", sample.get("altitude", 0.0)))
+        alt = float(sample.get("gps_altitude", sample.get("altitude.1", sample.get("altitude", 0.0))))
 
         if self.ref_lat is None:
             self.ref_lat = lat
@@ -251,7 +337,6 @@ class MinimalNavFilter:
         up = alt - float(self.ref_alt)
 
         return np.array([up, east, north], dtype=float)
-
 
 def geodetic_to_local_m(lat: float, lon: float, lat0: float, lon0: float) -> np.ndarray:
     r_earth = 6378137.0
@@ -316,3 +401,11 @@ def quat_to_rotmat(q: np.ndarray) -> np.ndarray:
         ],
         dtype=float,
     )
+
+
+def _safe_float(value: object) -> Optional[float]:
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return None
+    return f if np.isfinite(f) else None
