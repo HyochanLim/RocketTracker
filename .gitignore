@@ -16,6 +16,8 @@ pnpm-debug.log*
 # Uploaded user files (optional: keep folder, ignore contents)
 uploads/avatars/*
 !uploads/avatars/.gitkeep
+data/uploads/flight/*
+!data/uploads/flight/.gitkeep
 
 # Python cache / virtual env
 __pycache__/

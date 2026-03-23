@@ -1,0 +1,25 @@
+.tracker-page .tracker-upload-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.tracker-page .tracker-saved-section {
+  margin-top: 1.2rem;
+}
+
+.tracker-page .tracker-saved-title {
+  margin: 0 0 0.6rem;
+}
+
+.tracker-page .tracker-saved-list {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.tracker-page .tracker-saved-item {
+  margin-bottom: 0.45rem;
+}
+
+.tracker-page .tracker-file-meta {
+  color: var(--muted);
+}

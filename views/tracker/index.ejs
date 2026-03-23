@@ -1,11 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%- include("../shared/head", { pageTitle: "Rocket Tracker | Tracker" }) %>
+  <%- include("../shared/head", { pageTitle: "Rocket Tracker | Tracker", extraStyles: ["/public/styles/tracker.css"] }) %>
   <body>
     <%- include("../shared/header") %>
     <main class="container page-panel">
-      <h1>Tracker Dashboard</h1>
-      <p>You are signed in. Connect your rocket status cards and charts here.</p>
+      <div class="tracker-page">
+        <h1>Tracker Dashboard</h1>
+        <p>Upload flight data once; we save file path in MongoDB so you can reuse it later.</p>
+        <% if (message && message.text) { %>
+          <p class="message <%= message.type === 'error' ? 'message-error' : 'message-success' %>">
+            <%= message.text %>
+          </p>
+        <% } %>
+        <form action="/tracker/upload" method="post" enctype="multipart/form-data" class="tracker-upload-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <input type="file" name="file" accept=".json,.csv" required />
+          <button type="submit" class="button button-primary">Upload</button>
+        </form>
+
+        <section class="tracker-saved-section">
+          <h2 class="tracker-saved-title">Saved Flight Files</h2>
+          <% if (!files || files.length === 0) { %>
+            <p class="profile-description">No saved files yet.</p>
+          <% } else { %>
+            <ul class="tracker-saved-list">
+              <% files.forEach(function (f) { %>
+                <li class="tracker-saved-item">
+                  <strong><%= f.originalName %></strong>
+                  <br />
+                  <small class="tracker-file-meta">Path: <%= f.storedPath %> | Size: <%= f.size %> bytes</small>
+                </li>
+              <% }) %>
+            </ul>
+          <% } %>
+        </section>
+      </div>
     </main>
   </body>
 </html>
