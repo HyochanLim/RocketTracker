@@ -11,7 +11,15 @@
   gap: 0.6rem;
 }
 
+.tracker-page .tracker-upload-input-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
 .tracker-page .tracker-upload-input {
+  flex: 1;
+  min-width: 0;
   padding: 0.4rem;
   background: rgba(8, 30, 37, 0.86);
   border: 1px solid var(--line);
@@ -68,6 +76,17 @@
   border: 1px solid rgba(114, 161, 170, 0.25);
   border-radius: 10px;
   background: rgba(8, 30, 37, 0.45);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.tracker-page .tracker-saved-item:hover {
+  border-color: rgba(114, 161, 170, 0.6);
+}
+
+.tracker-page .tracker-saved-item.is-selected {
+  border-color: #5ca6a0;
+  background: rgba(39, 79, 130, 0.3);
 }
 
 .tracker-page .tracker-file-meta {
@@ -76,6 +95,16 @@
 
 .tracker-page .tracker-analyze-wrap {
   margin-top: 1rem;
+}
+
+.tracker-page .tracker-warning {
+  margin-top: 0.9rem;
+  border: 1px solid rgba(255, 90, 90, 0.65);
+  background: rgba(107, 18, 28, 0.32);
+  color: #ffb7b7;
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.92rem;
 }
 
 .tracker-page .tracker-visualizer-section {
@@ -121,6 +150,22 @@
 
 #playbackProgress {
   flex: 1;
+}
+
+.tracker-playback-time {
+  min-width: 74px;
+  text-align: center;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.tracker-playback-pressure {
+  min-width: 84px;
+  text-align: center;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 #cesiumContainer .cesium-viewer-bottom {
