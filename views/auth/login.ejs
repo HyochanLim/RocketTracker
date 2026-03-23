@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../shared/head", { pageTitle: "Rocket Tracker | Login" }) %>
+  <body>
+    <%- include("../shared/header") %>
+    <main class="container auth-layout">
+      <section class="auth-card">
+        <h1>Login</h1>
+        <% if (inputData.errorMessage) { %>
+          <p class="message message-error"><%= inputData.errorMessage %></p>
+        <% } %>
+        <form action="/login" method="POST" class="form-grid">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <label for="email">Email</label>
+          <input id="email" type="email" name="email" required value="<%= inputData.email %>" />
+          <label for="password">Password</label>
+          <input id="password" type="password" name="password" required />
+          <button type="submit" class="button button-primary">Login</button>
+        </form>
+        <p class="auth-switch">
+          No account?
+          <a href="/signup" class="auth-switch-link">Sign up here</a>
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

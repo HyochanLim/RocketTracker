@@ -1,7 +1,0 @@
-logic/3Dvisualizer/
-public/
-views/
-logic/filtering/__pycache__/
-logic/filtering/README.md
-data/modifieddata/
-data/rawdata.parsing.algorithm.py

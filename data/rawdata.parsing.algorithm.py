@@ -2,7 +2,7 @@ import os
 import json
 
 def parse_and_save_raw(input_path, output_path):
-    # CSV 헤더 파싱 및 데이터 매핑
+    # Parse CSV headers and map data rows.
     parsed_data = []
     with open(input_path, 'r', encoding='utf-8') as f:
         raw_header = [h.strip() for h in f.readline().strip().split(',')]
@@ -20,7 +20,7 @@ def parse_and_save_raw(input_path, output_path):
                 continue
             row = {}
             for k, v in zip(header, values):
-                # current_time만 time(s)로 변환, 나머지는 float 시도, 실패 시 문자열
+                # Convert current_time to time (seconds); try float for others.
                 if k == 'current_time':
                     try:
                         row['time'] = float(v) / 1000.0
@@ -32,7 +32,7 @@ def parse_and_save_raw(input_path, output_path):
                     except ValueError:
                         row[k] = v
             parsed_data.append(row)
-    # JSON 파일로 저장
+    # Save as JSON file.
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(parsed_data, f, ensure_ascii=False, indent=2)
 

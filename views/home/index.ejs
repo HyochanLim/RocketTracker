@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../shared/head", { pageTitle: "Rocket Tracker | Home" }) %>
+  <body>
+    <%- include("../shared/header") %>
+    <main class="container hero">
+      <section class="hero-card">
+        <p class="badge">Realtime Mission Dashboard</p>
+        <h1>Track your rocket mission data at a glance.</h1>
+        <p>Sign in to open the tracker and monitor orbit, status, and mission events.</p>
+        <div class="hero-actions">
+          <% if (!isAuth) { %>
+            <a href="/signup" class="button button-primary">Get Started</a>
+            <a href="/login" class="button button-secondary">Login</a>
+          <% } else { %>
+            <a href="/tracker" class="button button-primary">Open Tracker</a>
+          <% } %>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

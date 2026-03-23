@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("./head", { pageTitle: "500 | Server Error" }) %>
+  <body>
+    <%- include("./header") %>
+    <main class="container page-panel">
+      <h1>Something went wrong</h1>
+      <p><%= errorMessage %></p>
+      <a href="/" class="button button-primary">Back to Home</a>
+    </main>
+  </body>
+</html>

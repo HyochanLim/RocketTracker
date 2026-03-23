@@ -12,7 +12,7 @@ RAW_CANDIDATES = [
 	"data/rawdata/FC1_DATA_LOG05.json",
 ]
 
-# raw JSON에서 필요한 필드만 표준화해 필터 입력으로 변환
+# Normalize required fields from raw JSON for filter input.
 def _coalesce_value(row, keys):
 	for key in keys:
 		if key in row and row.get(key) is not None:
@@ -54,32 +54,32 @@ def raw_data_converter(raw_data):
 			time_f /= 1000.0
 		new_row = {
 			"time": time_f,
-			# 가속도
+			# Acceleration
 			"accel_x": _coalesce_float(row, ["accel_x", "ax"], 0.0),
 			"accel_y": _coalesce_float(row, ["accel_y", "ay"], 0.0),
 			"accel_z": _coalesce_float(row, ["accel_z", "az"], 0.0),
-			# 자이로
+			# Gyroscope
 			"gyro_roll": _coalesce_float(row, ["gyro_roll", "gx"], 0.0),
 			"gyro_pitch": _coalesce_float(row, ["gyro_pitch", "gy"], 0.0),
 			"gyro_yaw": _coalesce_float(row, ["gyro_yaw", "gz"], 0.0),
-			# 자력계
+			# Magnetometer
 			"mag_x": _coalesce_float(row, ["mag_x", "mx"], 0.0),
 			"mag_y": _coalesce_float(row, ["mag_y", "my"], 0.0),
 			"mag_z": _coalesce_float(row, ["mag_z", "mz"], 0.0),
-			# GPS/위치 (없으면 None)
+			# GPS position (None if missing)
 			"latitude": _coalesce_value(row, ["latitude", "lat"]),
 			"longitude": _coalesce_value(row, ["longitude", "lon", "lng"]),
-			# GPS 속도/방향 (없으면 None 유지)
+			# GPS speed/course (keep None if missing)
 			"speed": speed_value,
 			"course": course_value,
-			# Baro/GPS 고도를 분리해 보관
+			# Keep barometric/GPS altitude separately
 			"baro_altitude": _coalesce_float(row, ["altitude", "abs_alt", "rel_alt"], 0.0),
 			"gps_altitude": _coalesce_float(row, ["altitude.1", "gps_altitude"], 0.0),
-			# 기존 필터 호환용
+			# For compatibility with existing filter logic
 			"altitude": _coalesce_float(row, ["altitude", "abs_alt", "rel_alt"], 0.0),
-			# 위성수 (없으면 0)
+			# Satellite count (0 if missing)
 			"nsat": _coalesce_int(row, ["nsat", "sat_count"], 0),
-			# GPS 품질
+			# GPS quality
 			"hdop": _coalesce_float(row, ["hdop"], 99.0),
 			"vdop": _coalesce_float(row, ["vdop"], 99.0),
 			"state_name": str(_coalesce_value(row, ["state_name", "state"]) or "").strip(),

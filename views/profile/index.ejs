@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../shared/head", { pageTitle: "Rocket Tracker | Profile" }) %>
+  <body>
+    <%- include("../shared/header") %>
+    <main class="container auth-layout">
+      <section class="auth-card">
+        <h1>Profile Settings</h1>
+        <p class="profile-description">View your profile info, then click edit to update everything.</p>
+
+        <% if (message && message.text) { %>
+          <p id="profile-message" class="message <%= message.type === 'error' ? 'message-error' : 'message-success' %>">
+            <%= message.text %>
+          </p>
+        <% } else { %>
+          <p id="profile-message" class="message" hidden></p>
+        <% } %>
+
+        <div class="profile-summary">
+          <div class="profile-summary-avatar-wrap">
+            <img
+              id="profile-avatar-preview"
+              class="profile-summary-avatar"
+              src="<%= userData.imageUrl || '' %>"
+              alt="Current profile avatar"
+            />
+          </div>
+          <div class="profile-summary-info">
+            <p><strong>Display name:</strong> <span id="profile-display-name"><%= userData.displayName || "User" %></span></p>
+            <p><strong>Email:</strong> <span id="profile-email"><%= userData.email || "" %></span></p>
+          </div>
+        </div>
+
+        <div class="profile-action-row">
+          <button type="button" id="toggle-profile-edit" class="button button-secondary">
+            <%= showEditForm ? "Close Edit" : "Edit Profile" %>
+          </button>
+          <form action="/logout" method="POST" class="logout-inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button type="submit" class="button button-danger">Logout</button>
+          </form>
+        </div>
+
+        <form
+          action="/profile/<%= userData.id || '' %>"
+          method="POST"
+          class="form-grid profile-edit-form"
+          enctype="multipart/form-data"
+          style="<%= showEditForm ? '' : 'display:none;' %>"
+        >
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <label for="display-name">Display Name</label>
+          <input
+            id="display-name"
+            type="text"
+            name="display-name"
+            required
+            value="<%= userData.displayName || '' %>"
+          />
+
+          <label for="email">Email</label>
+          <p id="email" class="profile-readonly-field"><%= userData.email || "" %></p>
+
+          <label for="avatar-image">Avatar Image (png/jpg/gif/webp)</label>
+          <input id="avatar-image" type="file" name="avatar-image" accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp" />
+          <p id="avatar-file-name" class="profile-file-help">No file selected.</p>
+
+          <button type="submit" class="button button-primary">Save Profile</button>
+        </form>
+
+        <script>
+          (function () {
+            var toggleButton = document.getElementById("toggle-profile-edit");
+            var form = document.querySelector(".profile-edit-form");
+            var message = document.getElementById("profile-message");
+            var avatarPreview = document.getElementById("profile-avatar-preview");
+            var displayNameText = document.getElementById("profile-display-name");
+            var emailText = document.getElementById("profile-email");
+            var avatarInput = document.getElementById("avatar-image");
+            var avatarFileName = document.getElementById("avatar-file-name");
+            if (!toggleButton || !form) return;
+
+            toggleButton.addEventListener("click", function () {
+              var opening = form.style.display === "none";
+              if (opening) {
+                form.style.display = "grid";
+                toggleButton.textContent = "Close Edit";
+              } else {
+                form.style.display = "none";
+                toggleButton.textContent = "Edit Profile";
+              }
+            });
+
+            if (avatarInput && avatarFileName) {
+              avatarInput.addEventListener("change", function () {
+                var file = avatarInput.files && avatarInput.files[0];
+                avatarFileName.textContent = file ? file.name : "No file selected.";
+              });
+            }
+
+            form.addEventListener("submit", async function (event) {
+              event.preventDefault();
+
+              var formData = new FormData(form);
+              var csrfInput = form.querySelector('input[name="_csrf"]');
+              var csrfToken = csrfInput ? csrfInput.value : "";
+              try {
+                var response = await fetch(form.action, {
+                  method: "POST",
+                  headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "CSRF-Token": csrfToken,
+                  },
+                  body: formData,
+                });
+                var contentType = response.headers.get("content-type") || "";
+                var data;
+                if (contentType.includes("application/json")) {
+                  data = await response.json();
+                } else {
+                  var text = await response.text();
+                  throw new Error(text || "Unexpected server response.");
+                }
+
+                if (!response.ok || !data.ok) {
+                  message.hidden = false;
+                  message.className = "message message-error";
+                  message.textContent = data.message || "Failed to update profile.";
+                  form.style.display = "grid";
+                  toggleButton.textContent = "Close Edit";
+                  return;
+                }
+
+                displayNameText.textContent = data.user.displayName || "User";
+                emailText.textContent = data.user.email || "";
+                if (data.user.imageUrl) avatarPreview.src = data.user.imageUrl;
+                var headerName = document.querySelector(".profile-trigger .profile-name");
+                var headerAvatar = document.querySelector(".profile-trigger .profile-avatar");
+                if (headerName) headerName.textContent = data.user.displayName || "User";
+                if (headerAvatar && data.user.imageUrl) headerAvatar.src = data.user.imageUrl;
+
+                message.hidden = false;
+                message.className = "message message-success";
+                message.textContent = data.message || "Profile updated successfully.";
+                form.style.display = "none";
+                toggleButton.textContent = "Edit Profile";
+              } catch (error) {
+                message.hidden = false;
+                message.className = "message message-error";
+                message.textContent = "Update failed: " + (error && error.message ? error.message : "Unknown error");
+              }
+            });
+          })();
+        </script>
+      </section>
+    </main>
+  </body>
+</html>
