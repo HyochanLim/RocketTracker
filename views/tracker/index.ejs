@@ -3,69 +3,64 @@
   <%- include("../shared/head", { pageTitle: "Rocket Tracker | Tracker", extraStyles: ["/public/styles/tracker.css"] }) %>
   <body>
     <%- include("../shared/header") %>
-    <main class="container page-panel">
+    <main class="container page-panel tracker-panel">
       <div class="tracker-page">
-        <h1>Tracker Dashboard</h1>
         <% if (message && message.text) { %>
           <p class="message <%= message.type === 'error' ? 'message-error' : 'message-success' %>">
             <%= message.text %>
           </p>
         <% } %>
-        <form action="/tracker/upload" method="post" enctype="multipart/form-data" class="tracker-upload-form">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-          <label for="tracker-upload-file">Upload New Flight File</label>
-          <input id="tracker-upload-file" class="tracker-upload-input" type="file" name="file" accept=".json,.csv,.xls,.xlsx" required />
-          <button type="submit" class="button button-primary">Analyze</button>
-        </form>
+        <div id="trackerInputSection">
+          <div class="tracker-upload-form">
+            <label for="tracker-upload-file">Upload New Flight File</label>
+            <input id="tracker-upload-file" class="tracker-upload-input" type="file" accept=".json,.csv,.xls,.xlsx" />
+          </div>
 
-        <section class="tracker-saved-section">
-          <h2 class="tracker-saved-title">Saved Flight Files</h2>
-          <% if (!files || files.length === 0) { %>
-            <p class="profile-description">No saved files yet.</p>
-          <% } else { %>
-            <label for="saved-flight-file">Use Previously Uploaded Data</label>
-            <select id="saved-flight-file" class="tracker-select">
-              <option value="">Select saved data</option>
-              <% files.forEach(function (f) { %>
-                <option value="<%= f._id %>"><%= f.originalName %> (<%= f.size %> bytes)</option>
-              <% }) %>
-            </select>
+          <section class="tracker-saved-section">
+            <h2 class="tracker-saved-title">Saved Flight Files</h2>
+            <% if (!files || files.length === 0) { %>
+              <p class="profile-description">No saved files yet.</p>
+            <% } else { %>
+              <label for="saved-flight-file">Use Previously Uploaded Data</label>
+              <select id="saved-flight-file" class="tracker-select">
+                <option value="">Select saved data</option>
+                <% files.forEach(function (f) { %>
+                  <option value="<%= f._id %>"><%= f.originalName %> (<%= f.size %> bytes)</option>
+                <% }) %>
+              </select>
 
-            <div class="tracker-saved-list">
-              <% files.forEach(function (f) { %>
-                <div class="tracker-saved-item">
-                  <strong><%= f.originalName %></strong>
-                  <br />
-                  <small class="tracker-file-meta">Path: <%= f.storedPath %> | Size: <%= f.size %> bytes</small>
-                </div>
-              <% }) %>
-            </div>
-          <% } %>
-        </section>
+              <div class="tracker-saved-list">
+                <% files.forEach(function (f) { %>
+                  <div class="tracker-saved-item">
+                    <strong><%= f.originalName %></strong>
+                    <br />
+                    <small class="tracker-file-meta">Path: <%= f.storedPath %> | Size: <%= f.size %> bytes</small>
+                  </div>
+                <% }) %>
+              </div>
+            <% } %>
+          </section>
 
-        <div class="tracker-analyze-wrap" id="tracker-analyze-wrap" hidden>
-          <button type="button" class="button button-secondary">Analyze</button>
+          <div class="tracker-analyze-wrap" id="tracker-analyze-wrap" hidden>
+            <button type="button" id="showVisualizerButton" class="button button-secondary">Analyze</button>
+          </div>
         </div>
+
+        <section id="trackerVisualizerSection" class="tracker-visualizer-section tracker-hidden-section">
+          <div id="cesiumContainer">
+            <div id="cesiumViewer"></div>
+            <div id="cesiumToolbar">
+              <button id="playButton" class="button button-secondary" type="button">Play</button>
+              <input id="playbackProgress" type="range" min="0" max="100" value="0" />
+              <button id="backToUploadButton" class="button button-ghost" type="button">Back</button>
+            </div>
+          </div>
+        </section>
       </div>
 
-      <script>
-        (function () {
-          var fileInput = document.getElementById("tracker-upload-file");
-          var savedSelect = document.getElementById("saved-flight-file");
-          var analyzeWrap = document.getElementById("tracker-analyze-wrap");
-          if (!analyzeWrap) return;
-
-          function updateAnalyzeButtonVisibility() {
-            var hasUpload = fileInput && fileInput.files && fileInput.files.length > 0;
-            var hasSaved = savedSelect && savedSelect.value && savedSelect.value.trim() !== "";
-            analyzeWrap.hidden = !(hasUpload || hasSaved);
-          }
-
-          if (fileInput) fileInput.addEventListener("change", updateAnalyzeButtonVisibility);
-          if (savedSelect) savedSelect.addEventListener("change", updateAnalyzeButtonVisibility);
-          updateAnalyzeButtonVisibility();
-        })();
-      </script>
+      <script src="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Cesium.js"></script>
+      <script src="/logic/3Dvisualizer/cesium.visual.js"></script>
+      <script src="/public/scripts/tracker-page.js"></script>
     </main>
   </body>
 </html>

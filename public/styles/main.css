@@ -26,6 +26,7 @@ body {
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+  padding-top: 72px;
 }
 
 /* Subtle animated "mist" overlay behind content */
@@ -101,8 +102,12 @@ a {
   border-bottom: 1px solid var(--line);
   background-color: rgba(6, 20, 25, 0.82);
   backdrop-filter: blur(8px);
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   overflow: visible;
+  z-index: 1000;
 }
 
 .site-header::before {
@@ -546,7 +551,11 @@ input:focus {
 }
 
 .page-panel {
-  margin: 3rem auto 0;
+  width: min(860px, 96%);
+  margin: 1.25rem auto 0;
+  min-height: calc(100vh - 100px);
+  max-height: calc(100vh - 100px);
+  overflow: hidden;
 }
 
 .profile-description {

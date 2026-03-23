@@ -27,6 +27,7 @@ app.use(checkAuthStatus);
 app.use(addCsrfToken);
 
 app.use("/public", express.static(path.join(__dirname, "public")));
+app.use("/logic", express.static(path.join(__dirname, "logic")));
 const uploadsRoot = path.join(__dirname, "uploads");
 fs.mkdirSync(uploadsRoot, { recursive: true });
 app.use("/uploads", express.static(uploadsRoot));

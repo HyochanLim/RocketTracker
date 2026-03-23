@@ -21,6 +21,7 @@ class FlightFile {
       fileHash,
     });
   }
+
 }
 
 module.exports = FlightFile;
