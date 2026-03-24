@@ -18,6 +18,19 @@ function makeSafeBaseName(filename) {
     .slice(0, 80) || "flight-data";
 }
 
+function getCesiumIonAccessToken() {
+  if (process.env.CESIUM_ION_ACCESS_TOKEN && String(process.env.CESIUM_ION_ACCESS_TOKEN).trim()) {
+    return String(process.env.CESIUM_ION_ACCESS_TOKEN).trim();
+  }
+  try {
+    const cfg = require("../config/cesium-ion.local");
+    if (cfg && typeof cfg.accessToken === "string" && cfg.accessToken.trim()) return cfg.accessToken.trim();
+  } catch {
+    /* optional local file */
+  }
+  return "";
+}
+
 async function getTracker(req, res, next) {
   try {
     const files = await FlightFile.findByUser(req.session.uid);
@@ -28,7 +41,7 @@ async function getTracker(req, res, next) {
         : req.query.error
           ? { type: "error", text: req.query.error }
           : null;
-    res.render("tracker/index", { files, message });
+    res.render("tracker/index", { files, message, cesiumIonToken: getCesiumIonAccessToken() });
   } catch (error) {
     next(error);
   }

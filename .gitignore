@@ -14,6 +14,7 @@ pnpm-debug.log*
 !.env.example
 config/ai-agent.local.js
 config/ai-agent.local.js
+config/cesium-ion.local.js
 
 # Uploaded user files (optional: keep folder, ignore contents)
 uploads/avatars/*

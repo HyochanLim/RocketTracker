@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%- include("../shared/head", { pageTitle: "Rocket Tracker | Tracker", extraStyles: ["/public/styles/tracker.css"] }) %>
+  <%- include("../shared/head", { pageTitle: "Rocket Tracker | Tracker", extraStyles: [
+    "/public/styles/tracker.css",
+    "https://cesium.com/downloads/cesiumjs/releases/1.139.1/Build/Cesium/Widgets/widgets.css",
+  ] }) %>
   <body>
     <%- include("../shared/header") %>
     <main class="container page-panel tracker-panel">
@@ -65,22 +68,19 @@
         </div>
 
         <section id="trackerVisualizerSection" class="tracker-visualizer-section tracker-hidden-section">
-          <div id="cesiumContainer">
-            <div id="cesiumViewer"></div>
-            <div id="cesiumToolbar">
-              <button id="playButton" class="button button-secondary" type="button">Play</button>
-              <input id="playbackProgress" type="range" min="0" max="100" value="0" />
-              <span id="playbackTime" class="tracker-playback-time">T+00:00</span>
-              <span id="playbackPressure" class="tracker-playback-pressure">P: -</span>
-              <button id="backToUploadButton" class="button button-ghost" type="button">Back</button>
-            </div>
+          <div id="cesiumContainer" class="tracker-visualizer-root"></div>
+          <div class="tracker-visualizer-back-row">
+            <button id="backToUploadButton" class="button button-ghost" type="button">Back</button>
           </div>
         </section>
       </div>
 
-      <script src="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Cesium.js"></script>
-      <script src="/logic/3Dvisualizer/cesium.visual.js"></script>
       <script src="/public/scripts/tracker-page.js"></script>
+      <script src="https://cesium.com/downloads/cesiumjs/releases/1.139.1/Build/Cesium/Cesium.js"></script>
+      <script type="application/json" id="cesium-ion-token-json"><%- JSON.stringify(typeof cesiumIonToken !== "undefined" ? cesiumIonToken : "") %></script>
+      <script src="/logic/3Dvisualizer/cesium-viewer.js"></script>
+      <script src="/logic/3Dvisualizer/cesium.trajectory.js"></script>
+      <script src="/logic/3Dvisualizer/cesium.visual.js"></script>
     </main>
   </body>
 </html>

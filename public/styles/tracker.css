@@ -173,24 +173,23 @@
   display: none;
 }
 
-#cesiumContainer {
+/* Cesium viewer root — matches quickstart container sizing */
+#cesiumContainer.tracker-visualizer-root {
+  position: relative;
   border: 1px solid rgba(114, 161, 170, 0.28);
   border-radius: 12px;
   overflow: hidden;
   background: rgba(8, 30, 37, 0.45);
   width: 100%;
-}
-
-#cesiumViewer {
-  position: relative;
-  width: 100%;
+  min-height: min(70vh, 760px);
   height: min(70vh, 760px);
+  box-sizing: border-box;
 }
 
-#cesiumViewer .cesium-viewer,
-#cesiumViewer .cesium-viewer-cesiumWidgetContainer,
-#cesiumViewer .cesium-widget,
-#cesiumViewer canvas {
+#cesiumContainer.tracker-visualizer-root .cesium-viewer,
+#cesiumContainer.tracker-visualizer-root .cesium-viewer-cesiumWidgetContainer,
+#cesiumContainer.tracker-visualizer-root .cesium-widget,
+#cesiumContainer.tracker-visualizer-root canvas {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
@@ -198,34 +197,12 @@
   display: block;
 }
 
-#cesiumToolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 0.8rem;
-  border-top: 1px solid rgba(114, 161, 170, 0.25);
-}
-
-#playbackProgress {
-  flex: 1;
-}
-
-.tracker-playback-time {
-  min-width: 74px;
-  text-align: center;
-  color: var(--text);
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.tracker-playback-pressure {
-  min-width: 84px;
-  text-align: center;
-  color: var(--text);
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-#cesiumContainer .cesium-viewer-bottom {
+#cesiumContainer.tracker-visualizer-root .cesium-viewer-bottom {
   display: none !important;
+}
+
+.tracker-visualizer-back-row {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
 }

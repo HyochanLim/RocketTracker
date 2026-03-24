@@ -15,7 +15,6 @@
   var analyzeLoadingText = document.getElementById("tracker-analyze-loading-text");
   var selectedSavedFileId = "";
   var warningTimer = null;
-  if (!analyzeWrap) return;
 
   function setAnalyzeLoading(active, message) {
     if (!analyzeLoading) return;
@@ -31,7 +30,7 @@
   function updateAnalyzeButtonVisibility() {
     var hasUpload = fileInput && fileInput.files && fileInput.files.length > 0;
     var hasSaved = selectedSavedFileId.trim() !== "";
-    analyzeWrap.hidden = !(hasUpload || hasSaved);
+    if (analyzeWrap) analyzeWrap.hidden = !(hasUpload || hasSaved);
   }
 
   function showVisualizer() {
@@ -246,16 +245,25 @@
       clearWarning();
     });
   }
+  function clickTargetElement(ev) {
+    var t = ev.target;
+    if (!t) return null;
+    if (t.nodeType === 1) return t;
+    return t.parentElement;
+  }
+
   if (savedList) {
     savedList.addEventListener("click", function (ev) {
-      var delBtn = ev.target.closest(".tracker-saved-delete");
+      var el = clickTargetElement(ev);
+      if (!el || !el.closest) return;
+      var delBtn = el.closest(".tracker-saved-delete");
       if (delBtn) {
         ev.preventDefault();
         ev.stopPropagation();
         deleteSavedFlight(delBtn.getAttribute("data-file-id"));
         return;
       }
-      var row = ev.target.closest(".tracker-saved-item");
+      var row = el.closest(".tracker-saved-item");
       if (!row) return;
       toggleSavedFile(row.getAttribute("data-file-id"));
       updateAnalyzeButtonVisibility();
