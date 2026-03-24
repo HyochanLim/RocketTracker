@@ -11,9 +11,22 @@
   var savedList = document.getElementById("tracker-saved-list");
   var emptyText = document.getElementById("tracker-empty-text");
   var warningBox = document.getElementById("tracker-warning");
+  var analyzeLoading = document.getElementById("tracker-analyze-loading");
+  var analyzeLoadingText = document.getElementById("tracker-analyze-loading-text");
   var selectedSavedFileId = "";
   var warningTimer = null;
   if (!analyzeWrap) return;
+
+  function setAnalyzeLoading(active, message) {
+    if (!analyzeLoading) return;
+    if (analyzeLoadingText && typeof message === "string" && message) {
+      analyzeLoadingText.textContent = message;
+    }
+    analyzeLoading.classList.toggle("tracker-hidden-section", !active);
+    analyzeLoading.setAttribute("aria-hidden", active ? "false" : "true");
+    if (showVisualizerButton) showVisualizerButton.disabled = !!active;
+    document.body.style.overflow = active ? "hidden" : "";
+  }
 
   function updateAnalyzeButtonVisibility() {
     var hasUpload = fileInput && fileInput.files && fileInput.files.length > 0;
@@ -86,6 +99,55 @@
     }
   }
 
+  function escapeHtml(text) {
+    return String(text || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function updateSavedListEmptyState() {
+    if (!savedList) return;
+    var count = savedList.querySelectorAll(".tracker-saved-item").length;
+    if (count === 0) {
+      if (emptyText) emptyText.classList.remove("tracker-hidden-section");
+      if (savedControls) savedControls.classList.add("tracker-hidden-section");
+    }
+  }
+
+  async function deleteSavedFlight(fileId) {
+    if (!fileId) return;
+    if (!window.confirm("Delete this saved flight from the server? This cannot be undone.")) return;
+    var token = csrfTokenInput ? csrfTokenInput.value : "";
+    try {
+      var response = await fetch("/tracker/file/" + encodeURIComponent(fileId) + "/delete", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "CSRF-Token": token,
+        },
+        body: JSON.stringify({ _csrf: token }),
+      });
+      var data = await response.json().catch(function () {
+        return {};
+      });
+      if (!response.ok || !data.ok) {
+        throw new Error(data.message || "Failed to delete.");
+      }
+      var row = savedList && savedList.querySelector('.tracker-saved-item[data-file-id="' + fileId + '"]');
+      if (row) row.remove();
+      if (selectedSavedFileId === fileId) selectSavedFile("");
+      updateSavedListEmptyState();
+      updateAnalyzeButtonVisibility();
+      clearWarning();
+    } catch (error) {
+      showWarning(error && error.message ? error.message : "Failed to delete saved file.");
+    }
+  }
+
   function appendSavedCard(file) {
     if (!savedList || !file || !file._id) return;
     var existing = savedList.querySelector('[data-file-id="' + file._id + '"]');
@@ -94,11 +156,12 @@
     var item = document.createElement("div");
     item.className = "tracker-saved-item";
     item.setAttribute("data-file-id", file._id);
-    item.innerHTML = "<strong>" + file.originalName + "</strong>";
-    item.addEventListener("click", function () {
-      toggleSavedFile(file._id);
-      updateAnalyzeButtonVisibility();
-    });
+    item.innerHTML =
+      '<span class="tracker-saved-item-label"><strong>' +
+      escapeHtml(file.originalName) +
+      '</strong></span><button type="button" class="button button-ghost tracker-saved-delete" data-file-id="' +
+      escapeHtml(file._id) +
+      '" aria-label="Delete saved flight file">Delete</button>';
     savedList.prepend(item);
   }
 
@@ -150,22 +213,27 @@
       }
 
       if (hasUpload) {
-        if (showVisualizerButton) showVisualizerButton.disabled = true;
+        setAnalyzeLoading(
+          true,
+          "Analyzing flight data (AI mapping)…"
+        );
         var uploaded = await uploadSelectedFile();
         if (!uploaded || !uploaded.file || !uploaded.file._id) {
           throw new Error("Uploaded file data not found.");
         }
+        setAnalyzeLoading(true, "Loading processed flight data…");
         var uploadedRecords = await getSavedFileRecords(uploaded.file._id);
         showVisualizerWithRecords(uploadedRecords);
         return;
       }
 
+      setAnalyzeLoading(true, "Loading flight data…");
       var savedRecords = await getSavedFileRecords(selectedSavedFileId);
       showVisualizerWithRecords(savedRecords);
     } catch (error) {
       showWarning(error && error.message ? error.message : "Failed to prepare analysis.");
     } finally {
-      if (showVisualizerButton) showVisualizerButton.disabled = false;
+      setAnalyzeLoading(false);
       updateAnalyzeButtonVisibility();
     }
   }
@@ -179,11 +247,18 @@
     });
   }
   if (savedList) {
-    savedList.querySelectorAll(".tracker-saved-item").forEach(function (item) {
-      item.addEventListener("click", function () {
-        toggleSavedFile(item.getAttribute("data-file-id"));
-        updateAnalyzeButtonVisibility();
-      });
+    savedList.addEventListener("click", function (ev) {
+      var delBtn = ev.target.closest(".tracker-saved-delete");
+      if (delBtn) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        deleteSavedFlight(delBtn.getAttribute("data-file-id"));
+        return;
+      }
+      var row = ev.target.closest(".tracker-saved-item");
+      if (!row) return;
+      toggleSavedFile(row.getAttribute("data-file-id"));
+      updateAnalyzeButtonVisibility();
     });
   }
   if (showVisualizerButton) showVisualizerButton.addEventListener("click", handleAnalyzeClick);

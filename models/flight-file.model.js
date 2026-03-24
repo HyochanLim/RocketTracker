@@ -29,6 +29,15 @@ class FlightFile {
     });
   }
 
+  static deleteByIdForUser(userId, fileId) {
+    if (!mongodb.ObjectId.isValid(fileId)) {
+      return Promise.resolve({ deletedCount: 0 });
+    }
+    return db.getDb().collection("flight_files").deleteOne({
+      _id: new mongodb.ObjectId(fileId),
+      userId: new mongodb.ObjectId(userId),
+    });
+  }
 }
 
 module.exports = FlightFile;

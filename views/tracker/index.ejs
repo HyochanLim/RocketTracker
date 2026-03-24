@@ -29,7 +29,15 @@
               <div id="tracker-saved-list" class="tracker-saved-list">
                 <% files.forEach(function (f) { %>
                   <div class="tracker-saved-item" data-file-id="<%= f._id %>">
-                    <strong><%= f.originalName %></strong>
+                    <span class="tracker-saved-item-label"><strong><%= f.originalName %></strong></span>
+                    <button
+                      type="button"
+                      class="button button-ghost tracker-saved-delete"
+                      data-file-id="<%= f._id %>"
+                      aria-label="Delete saved flight file"
+                    >
+                      Delete
+                    </button>
                   </div>
                 <% }) %>
               </div>
@@ -40,6 +48,19 @@
 
           <div class="tracker-analyze-wrap" id="tracker-analyze-wrap" hidden>
             <button type="button" id="showVisualizerButton" class="button button-secondary">Analyze</button>
+          </div>
+        </div>
+
+        <div
+          id="tracker-analyze-loading"
+          class="tracker-analyze-loading tracker-hidden-section"
+          role="status"
+          aria-live="polite"
+          aria-hidden="true"
+        >
+          <div class="tracker-analyze-loading-inner">
+            <div class="tracker-analyze-spinner" aria-hidden="true"></div>
+            <p id="tracker-analyze-loading-text" class="tracker-analyze-loading-text">Preparing analysis…</p>
           </div>
         </div>
 

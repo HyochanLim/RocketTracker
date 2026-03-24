@@ -98,19 +98,27 @@ async function uploadTrackerFile(req, res, next) {
 
     const relativeStoredPath = path.relative(path.join(__dirname, ".."), parsedAbsolutePath).replace(/\\/g, "/");
 
+    const rawDir = path.join(__dirname, "..", "data", "storage", "raw_uploads", req.session.uid);
+    await fsp.mkdir(rawDir, { recursive: true });
+    const rawExt = path.extname(req.file.originalname || "").toLowerCase() || ".dat";
+    const rawFilename = `${fileHash.slice(0, 16)}-${safeBase}${rawExt}`;
+    const rawPermanentPath = path.join(rawDir, rawFilename);
+    await fsp.copyFile(absolutePath, rawPermanentPath);
+    await fsp.unlink(absolutePath);
+    const relativeRawPath = path.relative(path.join(__dirname, ".."), rawPermanentPath).replace(/\\/g, "/");
+
     const insertResult = await FlightFile.create({
       userId: new mongodb.ObjectId(req.session.uid),
       originalName: req.file.originalname,
       mimeType: "application/json",
       size: req.file.size,
       storedPath: relativeStoredPath,
+      rawStoredPath: relativeRawPath,
       fileHash,
       sourceExt: path.extname(req.file.originalname || "").toLowerCase(),
       recordCount: Array.isArray(standardizedRecords) ? standardizedRecords.length : 0,
       createdAt: new Date(),
     });
-
-    fs.unlink(absolutePath, function () {});
 
     if (isAjaxRequest(req)) {
       return res.json({
@@ -134,6 +142,27 @@ async function uploadTrackerFile(req, res, next) {
   }
 }
 
+const projectRoot = path.join(__dirname, "..");
+
+async function rebuildParsedJsonFromRaw(fileDoc) {
+  if (!fileDoc.rawStoredPath) {
+    return null;
+  }
+  const rawAbs = path.join(projectRoot, fileDoc.rawStoredPath);
+  const parsedAbs = path.join(projectRoot, fileDoc.storedPath);
+  const parsedRecords = await parseFlightFileToJson(rawAbs);
+  const aiParsed = await parseRowsWithAiAgent(parsedRecords, {
+    filename: fileDoc.originalName,
+  });
+  const standardizedRecords =
+    aiParsed && Array.isArray(aiParsed.standardizedRecords) && aiParsed.standardizedRecords.length > 0
+      ? aiParsed.standardizedRecords
+      : parsedRecords;
+  await fsp.mkdir(path.dirname(parsedAbs), { recursive: true });
+  await fsp.writeFile(parsedAbs, JSON.stringify(standardizedRecords, null, 2), "utf-8");
+  return standardizedRecords;
+}
+
 async function getFlightData(req, res, next) {
   try {
     const fileId = req.params.fileId;
@@ -142,9 +171,33 @@ async function getFlightData(req, res, next) {
       return res.status(404).json({ ok: false, message: "Saved file not found." });
     }
 
-    const absolutePath = path.join(__dirname, "..", fileDoc.storedPath);
-    const raw = await fsp.readFile(absolutePath, "utf-8");
-    const records = JSON.parse(raw);
+    const parsedAbs = path.join(projectRoot, fileDoc.storedPath);
+    let records;
+    try {
+      const text = await fsp.readFile(parsedAbs, "utf-8");
+      records = JSON.parse(text);
+    } catch (err) {
+      if (err && err.code === "ENOENT") {
+        try {
+          const rebuilt = await rebuildParsedJsonFromRaw(fileDoc);
+          if (!rebuilt) {
+            return res.status(404).json({
+              ok: false,
+              message: "Stored flight data is missing and cannot be rebuilt. Please upload the file again.",
+            });
+          }
+          records = rebuilt;
+        } catch {
+          return res.status(404).json({
+            ok: false,
+            message: "Stored flight data is missing and could not be rebuilt. Please upload the file again.",
+          });
+        }
+      } else {
+        throw err;
+      }
+    }
+
     return res.json({
       ok: true,
       file: {
@@ -158,4 +211,54 @@ async function getFlightData(req, res, next) {
   }
 }
 
-module.exports = { getTracker, uploadTrackerFile, getFlightData };
+function isSafeRelativeStoragePath(rel) {
+  if (!rel || typeof rel !== "string") return false;
+  if (rel.includes("..")) return false;
+  if (path.isAbsolute(rel)) return false;
+  return true;
+}
+
+async function unlinkIfExists(absPath) {
+  try {
+    await fsp.unlink(absPath);
+  } catch (err) {
+    if (err && err.code !== "ENOENT") throw err;
+  }
+}
+
+async function deleteTrackerFile(req, res, next) {
+  if (!isAjaxRequest(req)) {
+    return res.status(400).json({ ok: false, message: "Invalid request." });
+  }
+  try {
+    const fileId = req.params.fileId;
+    if (!mongodb.ObjectId.isValid(fileId)) {
+      return res.status(422).json({ ok: false, message: "Invalid file id." });
+    }
+
+    const fileDoc = await FlightFile.findByIdForUser(req.session.uid, fileId);
+    if (!fileDoc) {
+      return res.status(404).json({ ok: false, message: "Saved file not found." });
+    }
+
+    const relPaths = [fileDoc.storedPath, fileDoc.rawStoredPath].filter(Boolean);
+    for (let i = 0; i < relPaths.length; i += 1) {
+      const rel = relPaths[i];
+      if (!isSafeRelativeStoragePath(rel)) {
+        return res.status(500).json({ ok: false, message: "Invalid stored path." });
+      }
+      await unlinkIfExists(path.join(projectRoot, rel));
+    }
+
+    const delResult = await FlightFile.deleteByIdForUser(req.session.uid, fileId);
+    if (!delResult.deletedCount) {
+      return res.status(404).json({ ok: false, message: "Saved file not found." });
+    }
+
+    return res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { getTracker, uploadTrackerFile, getFlightData, deleteTrackerFile };

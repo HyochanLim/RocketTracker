@@ -214,6 +214,21 @@
     }, 120);
   }
 
+  function zoomToEntityWithFallback(entity) {
+    if (!entity || !viewer) return;
+    var result = viewer.zoomTo(entity);
+    if (!result) return;
+    if (typeof result.catch === "function") {
+      result.catch(function () {
+        viewer.camera.flyHome(0);
+      });
+    } else if (typeof result.otherwise === "function") {
+      result.otherwise(function () {
+        viewer.camera.flyHome(0);
+      });
+    }
+  }
+
   function drawTrajectory() {
     if (!viewer) return;
     clearEntities();
@@ -258,13 +273,9 @@
     });
 
     if (trajectoryEntity) {
-      viewer.zoomTo(trajectoryEntity).otherwise(function () {
-        viewer.camera.flyHome(0);
-      });
+      zoomToEntityWithFallback(trajectoryEntity);
     } else {
-      viewer.zoomTo(movingEntity).otherwise(function () {
-        viewer.camera.flyHome(0);
-      });
+      zoomToEntityWithFallback(movingEntity);
     }
     renderFrame(0);
   }
