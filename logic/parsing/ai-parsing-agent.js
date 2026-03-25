@@ -1,7 +1,3 @@
-const fs = require("fs/promises");
-const path = require("path");
-const { parseFlightFileToJson } = require("./flight-data.parser");
-
 const PROMPT_TEMPLATE = "Map flight rows to strict JSON schema. JSON only, minimal tokens.";
 const RULES = [
   "JSON object only. No prose.",
@@ -123,20 +119,4 @@ async function parseRowsWithAiAgent(records, options) {
   return result;
 }
 
-async function parseFileWithAiAgent(filePath, options) {
-  const parsed = await parseFlightFileToJson(filePath);
-  return parseRowsWithAiAgent(parsed, { ...(options || {}), filename: path.basename(filePath) });
-}
-
-async function parseJsonStringWithAiAgent(jsonText, options) {
-  const parsed = JSON.parse(jsonText);
-  const rows = Array.isArray(parsed) ? parsed : Array.isArray(parsed.records) ? parsed.records : [parsed];
-  return parseRowsWithAiAgent(rows, options);
-}
-
-async function parseJsonFileWithAiAgent(jsonFilePath, options) {
-  const raw = await fs.readFile(jsonFilePath, "utf-8");
-  return parseJsonStringWithAiAgent(raw, options);
-}
-
-module.exports = { PROMPT_TEMPLATE, RULES, parseRowsWithAiAgent, parseFileWithAiAgent, parseJsonStringWithAiAgent, parseJsonFileWithAiAgent };
+module.exports = { parseRowsWithAiAgent };

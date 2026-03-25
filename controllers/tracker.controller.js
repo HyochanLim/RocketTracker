@@ -11,6 +11,12 @@ function isAjaxRequest(req) {
   return req.xhr || req.get("X-Requested-With") === "XMLHttpRequest";
 }
 
+function recordsFromParsedJsonPayload(parsed) {
+  if (Array.isArray(parsed)) return parsed;
+  if (parsed && typeof parsed === "object" && Array.isArray(parsed.records)) return parsed.records;
+  return [];
+}
+
 function makeSafeBaseName(filename) {
   return String(filename || "flight-data")
     .replace(/\.[^/.]+$/, "")
@@ -216,7 +222,7 @@ async function getFlightData(req, res, next) {
         _id: sf.id,
         originalName: sf.originalName,
       },
-      records: Array.isArray(records) ? records : [],
+      records: recordsFromParsedJsonPayload(records),
     });
   } catch (error) {
     next(error);

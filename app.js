@@ -33,11 +33,12 @@ const uploadsRoot = path.join(__dirname, "uploads");
 fs.mkdirSync(uploadsRoot, { recursive: true });
 app.use("/uploads", express.static(uploadsRoot));
 
-// Reuse legacy tracker assets as reference source.
 const legacyRoot = path.join(__dirname, "..", "rocket_Tracker-main");
-app.use("/legacy/js", express.static(path.join(legacyRoot, "js")));
-app.use("/legacy/styles", express.static(path.join(legacyRoot, "styles")));
-app.use("/legacy/data", express.static(path.join(legacyRoot, "data")));
+if (fs.existsSync(legacyRoot)) {
+  app.use("/legacy/js", express.static(path.join(legacyRoot, "js")));
+  app.use("/legacy/styles", express.static(path.join(legacyRoot, "styles")));
+  app.use("/legacy/data", express.static(path.join(legacyRoot, "data")));
+}
 
 app.use(authRoutes);
 app.use(baseRoutes);
