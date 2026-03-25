@@ -157,15 +157,15 @@ async function uploadTrackerFile(req, res, next) {
 
 const projectRoot = path.join(__dirname, "..");
 
-async function rebuildParsedJsonFromRaw(fileDoc) {
-  if (!fileDoc.rawStoredPath) {
+async function rebuildParsedJsonFromRaw(flight) {
+  if (!flight.rawStoredPath) {
     return null;
   }
-  const rawAbs = path.join(projectRoot, fileDoc.rawStoredPath);
-  const parsedAbs = path.join(projectRoot, fileDoc.storedPath);
+  const rawAbs = path.join(projectRoot, flight.rawStoredPath);
+  const parsedAbs = path.join(projectRoot, flight.storedPath);
   const parsedRecords = await parseFlightFileToJson(rawAbs);
   const aiParsed = await parseRowsWithAiAgent(parsedRecords, {
-    filename: fileDoc.originalName,
+    filename: flight.originalName,
   });
   const standardizedRecords =
     aiParsed && Array.isArray(aiParsed.standardizedRecords) && aiParsed.standardizedRecords.length > 0
@@ -178,13 +178,12 @@ async function rebuildParsedJsonFromRaw(fileDoc) {
 
 async function getFlightData(req, res, next) {
   try {
-    const fileId = req.params.fileId;
-    const fileDoc = await FlightFile.findByIdForUser(req.session.uid, fileId);
-    if (!fileDoc) {
-      return res.status(404).json({ ok: false, message: "Saved file not found." });
+    const sf = req.selectedFlightFile;
+    if (!sf) {
+      return res.status(500).json({ ok: false, message: "Flight file context missing." });
     }
 
-    const parsedAbs = path.join(projectRoot, fileDoc.storedPath);
+    const parsedAbs = path.join(projectRoot, sf.storedPath);
     let records;
     try {
       const text = await fsp.readFile(parsedAbs, "utf-8");
@@ -192,7 +191,7 @@ async function getFlightData(req, res, next) {
     } catch (err) {
       if (err && err.code === "ENOENT") {
         try {
-          const rebuilt = await rebuildParsedJsonFromRaw(fileDoc);
+          const rebuilt = await rebuildParsedJsonFromRaw(sf);
           if (!rebuilt) {
             return res.status(404).json({
               ok: false,
@@ -214,8 +213,8 @@ async function getFlightData(req, res, next) {
     return res.json({
       ok: true,
       file: {
-        _id: fileDoc._id.toString(),
-        originalName: fileDoc.originalName,
+        _id: sf.id,
+        originalName: sf.originalName,
       },
       records: Array.isArray(records) ? records : [],
     });
@@ -244,17 +243,12 @@ async function deleteTrackerFile(req, res, next) {
     return res.status(400).json({ ok: false, message: "Invalid request." });
   }
   try {
-    const fileId = req.params.fileId;
-    if (!mongodb.ObjectId.isValid(fileId)) {
-      return res.status(422).json({ ok: false, message: "Invalid file id." });
+    const sf = req.selectedFlightFile;
+    if (!sf) {
+      return res.status(500).json({ ok: false, message: "Flight file context missing." });
     }
 
-    const fileDoc = await FlightFile.findByIdForUser(req.session.uid, fileId);
-    if (!fileDoc) {
-      return res.status(404).json({ ok: false, message: "Saved file not found." });
-    }
-
-    const relPaths = [fileDoc.storedPath, fileDoc.rawStoredPath].filter(Boolean);
+    const relPaths = [sf.storedPath, sf.rawStoredPath].filter(Boolean);
     for (let i = 0; i < relPaths.length; i += 1) {
       const rel = relPaths[i];
       if (!isSafeRelativeStoragePath(rel)) {
@@ -263,7 +257,7 @@ async function deleteTrackerFile(req, res, next) {
       await unlinkIfExists(path.join(projectRoot, rel));
     }
 
-    const delResult = await FlightFile.deleteByIdForUser(req.session.uid, fileId);
+    const delResult = await FlightFile.deleteByIdForUser(req.session.uid, sf.id);
     if (!delResult.deletedCount) {
       return res.status(404).json({ ok: false, message: "Saved file not found." });
     }

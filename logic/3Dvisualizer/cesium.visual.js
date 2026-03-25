@@ -15,6 +15,9 @@
     if (typeof window.applyCesiumFlightOverlay === "function") {
       await window.applyCesiumFlightOverlay(viewer, rawRecords);
     }
+    if (typeof window.applyTrajectoryScratch === "function") {
+      window.applyTrajectoryScratch(viewer, rawRecords);
+    }
   }
 
   window.initCesiumVisualizer = initCesiumVisualizer;
