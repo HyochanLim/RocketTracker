@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="g" x1="16" y1="16" x2="112" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#39ff14" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#39ff14" stop-opacity="0.25"/>
+    </linearGradient>
+    <filter id="s" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="14" y="14" width="100" height="100" rx="22" fill="rgba(0,0,0,0.82)" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+  <rect x="18" y="18" width="92" height="92" rx="20" fill="url(#g)" opacity="0.08"/>
+
+  <!-- Crown -->
+  <g filter="url(#s)">
+    <path d="M36 54L48 66L64 46L80 66L92 54L86 84H42L36 54Z" fill="rgba(57,255,20,0.92)"/>
+    <path d="M44 84H84" stroke="rgba(255,255,255,0.28)" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Spark -->
+  <path d="M96 34l4 6 7 2-7 2-4 6-4-6-7-2 7-2 4-6Z" fill="rgba(255,255,255,0.22)"/>
+</svg>
+

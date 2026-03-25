@@ -38,17 +38,48 @@ class User {
       password: hashedPassword,
       isAdmin: false,
       imageUrl: "",
+      bio: "",
+      createdAt: new Date(),
+      badges: [],
     });
   }
 
+  static toProfileView(userDoc) {
+    if (!userDoc) return null;
+    return {
+      id: userDoc._id.toString(),
+      displayName: userDoc.displayName || "",
+      email: userDoc.email || "",
+      imageUrl: userDoc.imageUrl || "",
+      bio: userDoc.bio || "",
+      createdAt: userDoc.createdAt || null,
+      badges: Array.isArray(userDoc.badges) ? userDoc.badges : [],
+    };
+  }
+
+  static addBadge(userId, badgeId) {
+    const id = String(badgeId || "").trim();
+    if (!id) return Promise.resolve({ matchedCount: 0, modifiedCount: 0 });
+    return db.getDb().collection("users").updateOne(
+      { _id: new mongodb.ObjectId(userId) },
+      { $addToSet: { badges: id } }
+    );
+  }
+
   static updateProfile(userId, profileData) {
+    const update = {
+      email: profileData.email,
+      displayName: profileData.displayName,
+      imageUrl: profileData.imageUrl,
+    };
+    if (typeof profileData.bio === "string") {
+      update.bio = profileData.bio;
+    }
     return db.getDb().collection("users").updateOne(
       { _id: new mongodb.ObjectId(userId) },
       {
         $set: {
-          email: profileData.email,
-          displayName: profileData.displayName,
-          imageUrl: profileData.imageUrl,
+          ...update,
         },
       }
     );

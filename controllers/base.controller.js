@@ -1,5 +1,6 @@
 const User = require("../models/user.model");
 const authUtil = require("../util/authentication");
+const { resolveBadges } = require("../util/badges");
 const fs = require("fs");
 const path = require("path");
 
@@ -26,11 +27,11 @@ async function getProfile(req, res, next) {
     const profileUser = await User.getById(req.params.id);
     if (!profileUser) return res.redirect(`/profile/${req.session.uid}`);
 
+    const baseView = User.toProfileView(profileUser);
     const userData = {
-      id: profileUser._id.toString(),
-      displayName: profileUser.displayName || "",
-      email: profileUser.email || "",
-      imageUrl: profileUser.imageUrl || (res.locals.user ? res.locals.user.imageUrl : ""),
+      ...baseView,
+      imageUrl: baseView.imageUrl || (res.locals.user ? res.locals.user.imageUrl : ""),
+      badgeDefs: resolveBadges(baseView.badges),
     };
     const message = req.query.saved ? { type: "success", text: "Profile updated successfully." } : null;
     return res.render("profile/index", { userData, message, showEditForm: false });
@@ -43,11 +44,12 @@ async function updateProfile(req, res, next) {
   if (req.params.id !== req.session.uid) return res.redirect(`/profile/${req.session.uid}`);
 
   const displayName = (req.body["display-name"] || "").trim();
+  const bio = typeof req.body.bio === "string" ? req.body.bio.trim().slice(0, 1200) : "";
   const email = req.session.user && req.session.user.email ? req.session.user.email : "";
   const currentImageUrl = res.locals.user && res.locals.user.imageUrl ? res.locals.user.imageUrl : "";
   const uploadedAvatarPath = req.file ? `/uploads/avatars/${req.file.filename}` : "";
   const imageUrl = uploadedAvatarPath || currentImageUrl;
-  const userData = { ...res.locals.user, id: req.session.uid, email, displayName, imageUrl };
+  const userData = { ...res.locals.user, id: req.session.uid, email, displayName, imageUrl, bio };
 
   if (!displayName) {
     if (isAjaxRequest(req)) {
@@ -72,7 +74,7 @@ async function updateProfile(req, res, next) {
       });
     }
 
-    await User.updateProfile(req.session.uid, { email, displayName, imageUrl });
+    await User.updateProfile(req.session.uid, { email, displayName, imageUrl, bio });
 
     const nextUserSessionData = {
       _id: req.session.uid,
@@ -97,6 +99,7 @@ async function updateProfile(req, res, next) {
             email,
             displayName,
             imageUrl,
+            bio,
           },
         });
       }

@@ -27,6 +27,19 @@
           </div>
           <div class="profile-summary-info">
             <p class="profile-nickname"><%= userData.displayName || "User" %></p>
+            <% if (Array.isArray(userData.badgeDefs) && userData.badgeDefs.length > 0) { %>
+              <div class="profile-badges" aria-label="Badges">
+                <% userData.badgeDefs.forEach(function (b) { %>
+                  <span class="profile-badge" title="<%= b.description || b.label %>">
+                    <img class="profile-badge-icon" src="<%= b.svgHref %>" alt="<%= b.label %> badge" />
+                    <span class="profile-badge-label"><%= b.label %></span>
+                  </span>
+                <% }) %>
+              </div>
+            <% } %>
+            <% if (userData.bio) { %>
+              <p class="profile-description" style="margin: 0.35rem 0 0;"><%= userData.bio %></p>
+            <% } %>
           </div>
         </div>
 
@@ -63,6 +76,15 @@
           <label for="avatar-image">Avatar Image (png/jpg/gif/webp)</label>
           <input id="avatar-image" type="file" name="avatar-image" accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp" />
           <p id="avatar-file-name" class="profile-file-help">No file selected.</p>
+
+          <label for="bio">Bio</label>
+          <textarea
+            id="bio"
+            name="bio"
+            rows="4"
+            maxlength="1200"
+            placeholder="Write a short bio..."
+          ><%= userData.bio || "" %></textarea>
 
           <button type="submit" class="button button-primary">Save Profile</button>
         </form>
@@ -101,6 +123,12 @@
               var formData = new FormData(form);
               var csrfInput = form.querySelector('input[name="_csrf"]');
               var csrfToken = csrfInput ? csrfInput.value : "";
+              var submitButton = form.querySelector('button[type="submit"]');
+              var originalSubmitText = submitButton ? submitButton.textContent : "";
+              if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = "Saving...";
+              }
               try {
                 var response = await fetch(form.action, {
                   method: "POST",
@@ -125,10 +153,16 @@
                   message.textContent = data.message || "Failed to update profile.";
                   form.style.display = "grid";
                   toggleButton.textContent = "Close Edit";
+                  if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalSubmitText;
+                  }
                   return;
                 }
 
                 if (data.user.imageUrl) avatarPreview.src = data.user.imageUrl;
+                var bioEl = document.querySelector(".profile-summary .profile-description");
+                if (bioEl && typeof data.user.bio === "string") bioEl.textContent = data.user.bio;
                 var headerName = document.querySelector(".profile-trigger .profile-name");
                 var headerAvatar = document.querySelector(".profile-trigger .profile-avatar");
                 if (headerName) headerName.textContent = data.user.displayName || "User";
@@ -139,10 +173,18 @@
                 message.textContent = data.message || "Profile updated successfully.";
                 form.style.display = "none";
                 toggleButton.textContent = "Edit Profile";
+                if (submitButton) {
+                  submitButton.disabled = false;
+                  submitButton.textContent = originalSubmitText;
+                }
               } catch (error) {
                 message.hidden = false;
                 message.className = "message message-error";
                 message.textContent = "Update failed: " + (error && error.message ? error.message : "Unknown error");
+                if (submitButton) {
+                  submitButton.disabled = false;
+                  submitButton.textContent = originalSubmitText;
+                }
               }
             });
           })();
