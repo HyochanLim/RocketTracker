@@ -70,8 +70,8 @@
     el.setAttribute("aria-live", "polite");
     el.style.cssText =
       "position:absolute;top:10px;left:10px;z-index:3;padding:8px 12px;" +
-      "background:rgba(6,40,42,0.9);color:#9ff; font:13px/1.4 system-ui,sans-serif;" +
-      "border-radius:10px;border:1px solid rgba(120,200,200,0.35);pointer-events:none;";
+      "background:rgba(0,0,0,0.92);color:#39ff14;font:13px/1.4 system-ui,sans-serif;" +
+      "border-radius:10px;border:1px solid rgba(57,255,20,0.45);pointer-events:none;";
     var container = document.getElementById("cesiumContainer");
     if (container && container.parentNode) {
       container.parentNode.insertBefore(el, container);
@@ -103,7 +103,7 @@
         polyline: {
           positions: Cesium.Cartesian3.fromDegreesArrayHeights(trailFlat),
           width: 2,
-          material: Cesium.Color.RED.withAlpha(0.9),
+          material: Cesium.Color.fromCssColorString("#39ff14").withAlpha(0.9),
           clampToGround: false,
         },
       });

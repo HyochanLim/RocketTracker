@@ -4,19 +4,195 @@
   <body>
     <%- include("../shared/header") %>
     <main class="container page-panel">
-      <h1>About Me</h1>
-      <p>
-        Hi, I am the creator of Rocket Tracker. I built this project to visualize mission
-        and flight data in a simple, fast, and clean dashboard.
-      </p>
-      <p>
-        This app focuses on practical tracking workflows: authentication, profile personalization,
-        and real-time style mission overview screens.
-      </p>
-      <p>
-        If you want to collaborate or share feedback, feel free to reach out through the project
-        repository.
-      </p>
+      <header class="about-hero" aria-label="About hero">
+        <div class="about-logo" aria-label="Logo placeholder">ROCKET.TRACKING</div>
+        <div class="about-byline">BY <span class="about-byline-name">Hyochan Lim</span></div>
+      </header>
+
+      <section class="about-section" aria-label="Profile">
+        <div class="about-section-title">Profile</div>
+        <button
+          type="button"
+          class="profile-card-trigger"
+          id="aboutProfileTrigger"
+          data-about-profile-open="true"
+          aria-haspopup="dialog"
+          aria-controls="aboutProfileModal"
+        >
+          <div class="dev-card dev-card-founder about-profile-card">
+            <div class="dev-card-top">
+              <div class="dev-avatar" aria-hidden="true">HC</div>
+              <div class="dev-meta">
+                <div class="dev-name">Hyochan Lim</div>
+                <div class="dev-role dev-role-founder">FOUNDER</div>
+              </div>
+            </div>
+          </div>
+        </button>
+      </section>
+
+      <section class="about-card" aria-label="Developers">
+        <h2 class="about-subtitle">Developers</h2>
+        <div class="dev-grid">
+          <button
+            type="button"
+            class="dev-card dev-card-founder dev-card-trigger"
+            data-about-profile-open="true"
+            aria-label="Open founder profile"
+            aria-haspopup="dialog"
+            aria-controls="aboutProfileModal"
+          >
+            <div class="dev-card-top">
+              <div class="dev-avatar" aria-hidden="true">HC</div>
+              <div class="dev-meta">
+                <div class="dev-name">Hyochan Lim</div>
+                <div class="dev-role dev-role-founder">FOUNDER</div>
+              </div>
+            </div>
+          </button>
+
+          <article class="dev-card dev-card-empty" aria-label="Future developer slot">
+            <div class="dev-empty-title">Interested in our project?</div>
+            <div class="dev-empty-sub">
+              Consider joining our team—if you'd like to collaborate or contribute, feel free to reach out.
+            </div>
+          </article>
+        </div>
+      </section>
     </main>
+
+    <div class="about-modal-overlay" id="aboutProfileModalOverlay" aria-hidden="true"></div>
+    <section
+      class="about-modal"
+      id="aboutProfileModal"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+      aria-label="Profile details"
+      tabindex="-1"
+    >
+      <div class="about-modal-header">
+        <div class="about-modal-title">
+          <div class="about-modal-identity">
+            <div class="about-modal-avatar" aria-hidden="true">HC</div>
+            <div class="about-modal-name-wrap">
+              <div class="dev-name">Hyochan Lim</div>
+              <div class="dev-role dev-role-founder">FOUNDER</div>
+              <div class="about-modal-joined">Joined · <span class="about-modal-joined-value">Since the beginning</span></div>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="about-modal-close" id="aboutProfileModalClose" aria-label="Close profile">
+          ×
+        </button>
+      </div>
+
+      <div class="about-modal-body">
+        <div class="about-modal-block">
+          <div class="about-modal-label">Bio</div>
+          <div class="about-modal-value">
+            Aerospace Engineering undergraduate at Seoul National University (Class of 2024). Interested in AI-based flight
+            vehicle control, web development, and UI/UX-focused product design.
+          </div>
+        </div>
+
+        <div class="about-modal-block">
+          <div class="about-modal-label">Find me</div>
+          <div class="about-social about-social-popover" style="margin-top: 0.65rem;">
+            <a
+              class="social-link social-discord"
+              href="https://discord.com/users/441955089977049098"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Discord profile"
+              title="Discord"
+            >
+              <span class="social-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    fill="currentColor"
+                    d="M19.5 6.6a14.2 14.2 0 0 0-3.6-1.1c-.2.4-.4.9-.6 1.3a13.1 13.1 0 0 0-6.5 0c-.2-.5-.4-.9-.6-1.3A14.4 14.4 0 0 0 4.6 6.6C2.9 9.2 2.4 11.8 2.7 14.3a14.6 14.6 0 0 0 4.6 2.3c.4-.5.7-1 1-1.6-.6-.2-1.1-.5-1.6-.9l.4-.3c3.1 1.5 6.4 1.5 9.6 0l.4.3c-.5.4-1 .7-1.6.9.3.5.6 1.1 1 1.6a14.6 14.6 0 0 0 4.6-2.3c.4-2.9-.2-5.5-1.6-7.7ZM9.3 13.1c-.7 0-1.3-.7-1.3-1.5s.6-1.5 1.3-1.5c.7 0 1.3.7 1.3 1.5s-.6 1.5-1.3 1.5Zm5.4 0c-.7 0-1.3-.7-1.3-1.5s.6-1.5 1.3-1.5c.7 0 1.3.7 1.3 1.5s-.6 1.5-1.3 1.5Z"
+                    opacity="0.95"
+                  />
+                </svg>
+              </span>
+              <span class="social-label">Discord</span>
+            </a>
+
+            <a
+              class="social-link social-github"
+              href="https://github.com/HyochanLim"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub profile"
+              title="GitHub"
+            >
+              <span class="social-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M12 2.2a10 10 0 0 0-3.2 19.4c.5.1.7-.2.7-.5v-1.8c-2.9.6-3.5-1.2-3.5-1.2-.5-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 .1 1.6 1.1 1.6 1.1.9 1.6 2.4 1.1 3 .9.1-.7.3-1.1.6-1.4-2.3-.3-4.7-1.2-4.7-5.2 0-1.1.4-2 1.1-2.7-.1-.3-.5-1.3.1-2.6 0 0 .9-.3 2.8 1.1a9.6 9.6 0 0 1 5.1 0c1.9-1.4 2.8-1.1 2.8-1.1.6 1.3.2 2.3.1 2.6.7.7 1.1 1.6 1.1 2.7 0 4-2.4 4.9-4.7 5.2.4.4.7 1 .7 2v3c0 .3.2.6.7.5A10 10 0 0 0 12 2.2Z"
+                    fill="currentColor"
+                    opacity="0.95"
+                  />
+                </svg>
+              </span>
+              <span class="social-label">GitHub</span>
+            </a>
+
+            <button
+              type="button"
+              class="social-link social-mail"
+              id="aboutMailTrigger"
+              aria-label="Show email addresses"
+              aria-haspopup="dialog"
+              aria-controls="aboutMailPopover"
+              aria-expanded="false"
+              title="Email"
+            >
+              <span class="social-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M4.6 6.7c.3-.4.7-.7 1.2-.7h12.4c.5 0 1 .3 1.2.7L12 12.7 4.6 6.7Z"
+                    fill="currentColor"
+                    opacity="0.9"
+                  />
+                  <path
+                    d="M4 8.1v9.2c0 .9.7 1.6 1.6 1.6h12.8c.9 0 1.6-.7 1.6-1.6V8.1l-7.6 6.1a.8.8 0 0 1-1 0L4 8.1Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <span class="social-label">Mail</span>
+            </button>
+
+            <div
+              class="about-mail-popover"
+              id="aboutMailPopover"
+              role="dialog"
+              aria-label="Email addresses"
+              aria-hidden="true"
+            >
+              <div class="about-mail-popover-title">Email</div>
+
+              <button type="button" class="about-mail-copy" data-copy="hyochan5211@gmail.com">
+                <span class="about-mail-copy-label">Personal</span>
+                <span class="about-mail-copy-value">hyochan5211@gmail.com</span>
+                <span class="about-mail-copied" aria-hidden="true">Copied!</span>
+              </button>
+
+              <button type="button" class="about-mail-copy" data-copy="hyochan5211@snu.ac.kr">
+                <span class="about-mail-copy-label">SNU</span>
+                <span class="about-mail-copy-value">hyochan5211@snu.ac.kr</span>
+                <span class="about-mail-copied" aria-hidden="true">Copied!</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Social/email are shown above as interactive chips + address list -->
+      </div>
+    </section>
+
+    <script src="/public/scripts/about-page.js"></script>
   </body>
 </html>

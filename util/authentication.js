@@ -38,16 +38,14 @@ function getDefaultAvatarUrl(seedValue) {
   const rng = mulberry32(seed);
 
   const palette = [
-    "6f42ff", // purple
-    "2f7f8d", // teal
-    "5c86ff", // blue
-    "ff4fd8", // pink
-    "2ecc71", // green
-    "ff8a3d", // orange
-    "1ccad8", // cyan
-    "b517ff", // violet
-    "00d2ff", // sky
-    "00ffa3", // mint
+    "39ff14",
+    "1faa0a",
+    "0d3d07",
+    "0fff4a",
+    "2a3318",
+    "1a1a1a",
+    "3d3d3d",
+    "e6ffe6",
   ];
 
   const c1 = pick(rng, palette);
@@ -103,7 +101,7 @@ function getDefaultAvatarUrl(seedValue) {
     </radialGradient>
   </defs>
 
-  <rect width="128" height="128" fill="#0a101b"/>
+  <rect width="128" height="128" fill="#000000"/>
   <rect width="128" height="128" fill="url(#bg)"/>
 
   <g clip-path="url(#clip)" filter="url(#b)">
@@ -112,7 +110,7 @@ function getDefaultAvatarUrl(seedValue) {
     <circle cx="${cx3}" cy="${cy3}" r="${r3}" fill="url(#g3)"/>
   </g>
 
-  <circle cx="64" cy="64" r="64" fill="none" stroke="rgba(255,255,255,0.08)" />
+  <circle cx="64" cy="64" r="64" fill="none" stroke="rgba(57,255,20,0.18)" />
 </svg>`.trim();
 
   return toDataSvg(svg);
