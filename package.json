@@ -8,6 +8,7 @@
     "start:prod": "node app.js"
   },
   "dependencies": {
+    "@fontsource/open-sauce-one": "^5.2.5",
     "bcrypt": "^6.0.0",
     "connect-mongodb-session": "^5.0.0",
     "csurf": "^1.11.0",

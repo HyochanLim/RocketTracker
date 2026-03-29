@@ -4,9 +4,11 @@
   <body>
     <%- include("../shared/header") %>
     <main class="container auth-layout">
-      <section class="auth-card">
-        <h1>Profile Settings</h1>
-        <p class="profile-description">View your profile info, then click edit to update everything.</p>
+      <section class="auth-card auth-card-profile">
+        <header class="profile-page-header">
+          <h1>Profile</h1>
+          <p class="profile-lead">Avatar, name, and bio. Edit anytime.</p>
+        </header>
 
         <% if (message && message.text) { %>
           <p id="profile-message" class="message <%= message.type === 'error' ? 'message-error' : 'message-success' %>">
@@ -16,17 +18,17 @@
           <p id="profile-message" class="message" hidden></p>
         <% } %>
 
-        <div class="profile-summary">
-          <div class="profile-summary-avatar-wrap">
+        <div class="profile-identity">
+          <div class="profile-avatar-ring">
             <img
               id="profile-avatar-preview"
-              class="profile-summary-avatar"
+              class="profile-avatar-lg"
               src="<%= userData.imageUrl || '' %>"
-              alt="Current profile avatar"
+              alt=""
             />
           </div>
-          <div class="profile-summary-info">
-            <p class="profile-nickname"><%= userData.displayName || "User" %></p>
+          <div class="profile-identity-main">
+            <p class="profile-display-name"><%= userData.displayName || "User" %></p>
             <% if (Array.isArray(userData.badgeDefs) && userData.badgeDefs.length > 0) { %>
               <div class="profile-badges" aria-label="Badges">
                 <% userData.badgeDefs.forEach(function (b) { %>
@@ -37,11 +39,18 @@
                 <% }) %>
               </div>
             <% } %>
-            <% if (userData.bio) { %>
-              <p class="profile-description" style="margin: 0.35rem 0 0;"><%= userData.bio %></p>
-            <% } %>
           </div>
         </div>
+
+        <section class="profile-about" aria-labelledby="profile-about-label">
+          <h2 id="profile-about-label" class="profile-about-label">About</h2>
+          <p
+            id="profile-bio-summary"
+            class="profile-bio-body<%= userData.bio && String(userData.bio).trim() ? '' : ' profile-bio-empty' %>"
+          >
+            <%= userData.bio && String(userData.bio).trim() ? userData.bio : "No bio yet — open Edit Profile to write one." %>
+          </p>
+        </section>
 
         <div class="profile-action-row">
           <button type="button" id="toggle-profile-edit" class="button button-secondary">
@@ -161,8 +170,16 @@
                 }
 
                 if (data.user.imageUrl) avatarPreview.src = data.user.imageUrl;
-                var bioEl = document.querySelector(".profile-summary .profile-description");
-                if (bioEl && typeof data.user.bio === "string") bioEl.textContent = data.user.bio;
+                var displayNameEl = document.querySelector(".profile-display-name");
+                if (displayNameEl && typeof data.user.displayName === "string") {
+                  displayNameEl.textContent = data.user.displayName || "User";
+                }
+                var bioEl = document.getElementById("profile-bio-summary");
+                if (bioEl && typeof data.user.bio === "string") {
+                  var bioText = data.user.bio.trim();
+                  bioEl.textContent = bioText || "No bio yet — open Edit Profile to write one.";
+                  bioEl.classList.toggle("profile-bio-empty", !bioText);
+                }
                 var headerName = document.querySelector(".profile-trigger .profile-name");
                 var headerAvatar = document.querySelector(".profile-trigger .profile-avatar");
                 if (headerName) headerName.textContent = data.user.displayName || "User";
