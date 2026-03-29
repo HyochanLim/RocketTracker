@@ -54,6 +54,10 @@
   function showVisualizerWithRecords(records) {
     showVisualizer();
     if (window.initCesiumVisualizer) window.initCesiumVisualizer(records);
+    setTimeout(function () {
+      var v = window.getCesiumViewer && window.getCesiumViewer();
+      if (v && typeof v.resize === "function") v.resize();
+    }, 150);
   }
 
   function showInputSection() {
@@ -271,5 +275,20 @@
   }
   if (showVisualizerButton) showVisualizerButton.addEventListener("click", handleAnalyzeClick);
   if (backToUploadButton) backToUploadButton.addEventListener("click", showInputSection);
+
+  var agentInput = document.getElementById("tracker-agent-input");
+  var agentSend = document.getElementById("tracker-agent-send");
+  function syncAgentSendState() {
+    if (!agentSend || !agentInput) return;
+    agentSend.disabled = !String(agentInput.value || "").trim();
+  }
+  if (agentInput && agentSend) {
+    agentInput.addEventListener("input", syncAgentSendState);
+    syncAgentSendState();
+    agentSend.addEventListener("click", function () {
+      /* Placeholder until /tracker/agent API exists */
+    });
+  }
+
   updateAnalyzeButtonVisibility();
 })();

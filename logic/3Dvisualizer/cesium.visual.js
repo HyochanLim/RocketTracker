@@ -18,6 +18,20 @@
     if (typeof window.applyTrajectoryScratch === "function") {
       window.applyTrajectoryScratch(viewer, rawRecords);
     }
+
+    function resizeViewer() {
+      if (viewer && typeof viewer.resize === "function") viewer.resize();
+    }
+    resizeViewer();
+    requestAnimationFrame(resizeViewer);
+    setTimeout(resizeViewer, 120);
+    if (typeof ResizeObserver !== "undefined") {
+      var el = document.getElementById("cesiumContainer");
+      if (el) {
+        var ro = new ResizeObserver(resizeViewer);
+        ro.observe(el);
+      }
+    }
   }
 
   window.initCesiumVisualizer = initCesiumVisualizer;
