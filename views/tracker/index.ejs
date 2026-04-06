@@ -68,14 +68,34 @@
         </div>
 
         <section id="trackerVisualizerSection" class="tracker-visualizer-section tracker-hidden-section">
-          <div class="tracker-visualizer-workbench">
+          <div class="tracker-visualizer-workbench" id="tracker-visualizer-workbench">
             <div class="tracker-visualizer-main">
-              <div id="cesiumContainer" class="tracker-visualizer-root"></div>
+              <div class="tracker-visualizer-map-slot">
+                <div id="cesiumContainer" class="tracker-visualizer-root"></div>
+              </div>
               <div class="tracker-visualizer-back-row">
                 <button id="backToUploadButton" class="button button-ghost" type="button">Back</button>
+                <button
+                  type="button"
+                  class="tracker-agent-toggle"
+                  id="tracker-agent-toggle"
+                  aria-expanded="false"
+                  aria-controls="tracker-agent-dock"
+                >
+                  <span class="tracker-agent-toggle-glow" aria-hidden="true"></span>
+                  <span class="tracker-agent-toggle-inner">
+                    <span class="tracker-agent-toggle-label">Agent</span>
+                    <span class="tracker-agent-toggle-hint">flight assistant</span>
+                  </span>
+                </button>
               </div>
             </div>
-            <aside class="tracker-agent-dock" aria-label="AI assistant">
+            <aside
+              class="tracker-agent-dock"
+              id="tracker-agent-dock"
+              aria-label="AI assistant"
+              aria-hidden="true"
+            >
               <%- include("tracker-agent-panel") %>
             </aside>
           </div>

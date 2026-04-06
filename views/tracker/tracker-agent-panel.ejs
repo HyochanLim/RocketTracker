@@ -1,7 +1,17 @@
 <div class="tracker-agent-panel">
   <header class="tracker-agent-header">
-    <span class="tracker-agent-header-title">Agent</span>
-    <span class="tracker-agent-header-hint">Tracker</span>
+    <div class="tracker-agent-header-labels">
+      <span class="tracker-agent-header-title">Agent</span>
+      <span class="tracker-agent-header-hint">Tracker</span>
+    </div>
+    <button
+      type="button"
+      class="tracker-agent-panel-close"
+      id="tracker-agent-panel-close"
+      aria-label="Close assistant panel"
+    >
+      <span aria-hidden="true">×</span>
+    </button>
   </header>
   <div class="tracker-agent-thread" id="tracker-agent-thread" role="log" aria-live="polite">
     <div class="tracker-agent-welcome" id="tracker-agent-welcome">

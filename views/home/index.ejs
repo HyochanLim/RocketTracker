@@ -1,22 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
   <%- include("../shared/head", { pageTitle: "Orbit | Home" }) %>
-  <body>
+  <body class="page-home">
     <%- include("../shared/header") %>
-    <main class="container hero">
-      <section class="hero-card">
-        <p class="badge">Realtime Mission Dashboard</p>
-        <h1>Track your mission data in orbit at a glance.</h1>
-        <p>Sign in to open the tracker and monitor orbit, status, and mission events.</p>
-        <div class="hero-actions">
-          <% if (!isAuth) { %>
-            <a href="/signup" class="button button-primary">Get Started</a>
-            <a href="/login" class="button button-secondary">Login</a>
-          <% } else { %>
-            <a href="/tracker" class="button button-primary">Open Tracker</a>
-          <% } %>
+    <main class="container hero hero-landing">
+      <div class="hero-mission-frame">
+        <div class="hero-console-bar">
+          <span class="hero-console-bar__program">Orbit · flight ops</span>
+          <span class="hero-console-bar__met">
+            <abbr title="Your device local time">LCL</abbr>
+            <span
+              class="hero-console-bar__nums hero-console-bar__clock"
+              id="hero-console-local-time"
+              aria-live="polite"
+              aria-atomic="true"
+            >00:00:00</span>
+          </span>
+          <span class="hero-console-bar__mode">Traj · att · timeline</span>
+          <span class="hero-console-bar__filler"></span>
+          <span class="hero-console-bar__badge">ops ready</span>
         </div>
-      </section>
+        <div class="hero-landing-inner">
+        <section class="hero-card hero-card--landing">
+          <p class="badge">Mission-style console</p>
+          <h1>Flight-ops dashboard style—trajectory, attitude, and MET in one glance.</h1>
+          <ul class="hero-skim" role="list">
+            <li>
+              <span class="hero-skim-label">Trajectory</span>
+              <span class="hero-skim-text">Raw logs → live ground track &amp; orbit on the globe. No hand-built ETL.</span>
+            </li>
+            <li>
+              <span class="hero-skim-label">Attitude</span>
+              <span class="hero-skim-text">3D vehicle orientation in a side panel next to the map—quick to read under load.</span>
+            </li>
+            <li>
+              <span class="hero-skim-label">MET &amp; events</span>
+              <span class="hero-skim-text">Mission clock, phases, and callouts aligned with what’s on screen.</span>
+            </li>
+          </ul>
+          <div class="hero-actions hero-actions--landing">
+            <% if (!isAuth) { %>
+              <a href="/signup" class="button button-primary">Get started</a>
+              <a href="/login" class="button button-secondary button-secondary--light">Log in</a>
+            <% } else { %>
+              <a href="/tracker" class="button button-primary">Open tracker</a>
+            <% } %>
+          </div>
+        </section>
+        <aside class="hero-landing-aside">
+          <figure class="hero-orbit-panel">
+            <figcaption class="hero-orbit-title">At a glance</figcaption>
+            <div class="hero-orbit-svg-wrap">
+              <svg
+                class="hero-orbit-svg"
+                viewBox="0 0 320 276"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="heroEarthGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="rgba(255,255,255,0.2)" />
+                    <stop offset="55%" stop-color="rgba(255,255,255,0.06)" />
+                    <stop offset="100%" stop-color="rgba(255,255,255,0.03)" />
+                  </linearGradient>
+                  <clipPath id="heroEarthClip">
+                    <circle cx="160" cy="218" r="46" />
+                  </clipPath>
+                </defs>
+                <g opacity="0.35" stroke="rgba(255,255,255,0.35)" fill="none">
+                  <line x1="24" y1="92" x2="296" y2="92" stroke-width="0.5" />
+                  <line x1="24" y1="138" x2="296" y2="138" stroke-width="0.5" />
+                  <line x1="84" y1="32" x2="84" y2="248" stroke-width="0.5" />
+                  <line x1="160" y1="32" x2="160" y2="248" stroke-width="0.5" />
+                  <line x1="236" y1="32" x2="236" y2="248" stroke-width="0.5" />
+                </g>
+                <g transform="translate(160 122) rotate(-16)">
+                  <ellipse
+                    rx="118"
+                    ry="48"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.14)"
+                    stroke-width="1"
+                    stroke-dasharray="5 7"
+                  />
+                  <ellipse
+                    rx="118"
+                    ry="48"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.55)"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    pathLength="100"
+                    stroke-dasharray="34 66"
+                  />
+                </g>
+                <circle cx="160" cy="218" r="46" fill="url(#heroEarthGrad)" stroke="rgba(255,255,255,0.18)" stroke-width="1" />
+                <g clip-path="url(#heroEarthClip)">
+                  <path
+                    d="M 118 236 Q 160 200 202 236"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.12)"
+                    stroke-width="1.2"
+                  />
+                </g>
+                <circle class="hero-orbit-vehicle" cx="252" cy="86" r="5.5" fill="#ffffff" opacity="0.95" />
+                <circle cx="252" cy="86" r="10" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1" />
+              </svg>
+            </div>
+            <div class="hero-orbit-blocks">
+              <div class="hero-orbit-block">
+                <h3 class="hero-orbit-block-title">Data ingest</h3>
+                <p class="hero-orbit-block-tag">Raw → live orbit</p>
+                <p class="hero-orbit-block-text">Drop telemetry or logs; the globe updates the track for you.</p>
+              </div>
+              <div class="hero-orbit-block">
+                <h3 class="hero-orbit-block-title">Attitude</h3>
+                <p class="hero-orbit-block-tag">3D · beside map</p>
+                <p class="hero-orbit-block-text">Rocket pose where operators expect it—next to the trajectory view.</p>
+              </div>
+              <div class="hero-orbit-block">
+                <h3 class="hero-orbit-block-title">Mission clock</h3>
+                <p class="hero-orbit-block-tag">T+ · phases</p>
+                <p class="hero-orbit-block-text">Elapsed time and milestones tied to the same display state.</p>
+              </div>
+            </div>
+          </figure>
+        </aside>
+        </div>
+      </div>
     </main>
+    <script>
+      (function () {
+        var el = document.getElementById("hero-console-local-time");
+        if (!el) return;
+        function pad(n) {
+          return String(n).padStart(2, "0");
+        }
+        function tick() {
+          var d = new Date();
+          el.textContent = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+        }
+        tick();
+        setInterval(tick, 1000);
+      })();
+    </script>
   </body>
 </html>

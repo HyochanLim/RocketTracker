@@ -62,6 +62,7 @@
 
   function showInputSection() {
     window.__trackerActiveFileId = "";
+    if (typeof window.__trackerSetAgentOpen === "function") window.__trackerSetAgentOpen(false);
     if (visualizerSection) visualizerSection.classList.add("tracker-hidden-section");
     if (inputSection) inputSection.classList.remove("tracker-hidden-section");
   }
@@ -280,4 +281,82 @@
   if (backToUploadButton) backToUploadButton.addEventListener("click", showInputSection);
 
   updateAnalyzeButtonVisibility();
+})();
+
+(function initAgentDockToggle() {
+  var workbench = document.getElementById("tracker-visualizer-workbench");
+  var toggle = document.getElementById("tracker-agent-toggle");
+  var dock = document.getElementById("tracker-agent-dock");
+  var closeBtn = document.getElementById("tracker-agent-panel-close");
+  if (!workbench || !toggle || !dock) return;
+
+  var hintEl = toggle.querySelector(".tracker-agent-toggle-hint");
+  var labelEl = toggle.querySelector(".tracker-agent-toggle-label");
+
+  function resizeCesium() {
+    var v = window.getCesiumViewer && window.getCesiumViewer();
+    if (v && typeof v.resize === "function") v.resize();
+  }
+
+  /** One resize after CSS settles — calling resize() during the transition often stutters WebGL */
+  var RESIZE_AFTER_TOGGLE_MS = 580;
+  var resizeAfterToggleTimer = null;
+
+  function scheduleResizeAfterToggle() {
+    if (resizeAfterToggleTimer) window.clearTimeout(resizeAfterToggleTimer);
+    resizeAfterToggleTimer = window.setTimeout(function () {
+      resizeAfterToggleTimer = null;
+      resizeCesium();
+      requestAnimationFrame(resizeCesium);
+    }, RESIZE_AFTER_TOGGLE_MS);
+  }
+
+  function syncToggleUi(open) {
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    dock.setAttribute("aria-hidden", open ? "false" : "true");
+    if (labelEl) labelEl.textContent = open ? "Hide" : "Agent";
+    if (hintEl) hintEl.textContent = open ? "close assistant" : "flight assistant";
+  }
+
+  function setOpen(open) {
+    var on = !!open;
+    workbench.classList.toggle("is-agent-open", on);
+    syncToggleUi(on);
+    if (typeof HTMLElement !== "undefined" && "inert" in HTMLElement.prototype) {
+      dock.inert = !on;
+    }
+    scheduleResizeAfterToggle();
+    if (on) {
+      window.setTimeout(function () {
+        var input = document.getElementById("tracker-agent-input");
+        if (input) input.focus();
+      }, 420);
+    } else if (dock.contains(document.activeElement)) {
+      toggle.focus();
+    }
+  }
+
+  function isOpen() {
+    return workbench.classList.contains("is-agent-open");
+  }
+
+  toggle.addEventListener("click", function () {
+    setOpen(!isOpen());
+  });
+  if (closeBtn) closeBtn.addEventListener("click", function () {
+    setOpen(false);
+  });
+
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key !== "Escape" || !isOpen()) return;
+    var vs = document.getElementById("trackerVisualizerSection");
+    if (!vs || vs.classList.contains("tracker-hidden-section")) return;
+    setOpen(false);
+  });
+
+  if (typeof HTMLElement !== "undefined" && "inert" in HTMLElement.prototype) {
+    dock.inert = true;
+  }
+
+  window.__trackerSetAgentOpen = setOpen;
 })();
