@@ -1,9 +1,5 @@
-const path = require("path");
-const fsp = require("fs/promises");
-
 const PROMPT_TEMPLATE = "Map flight rows to strict JSON schema. JSON only, minimal tokens.";
 
-const RAW_FLIGHT_DATA_JSON = path.join(__dirname, "..", "aiAgent", "rawFlightData.json");
 const RULES = [
   "JSON object only. No prose.",
   "Unknown -> null. No guessing.",
@@ -120,29 +116,6 @@ async function parseRowsWithAiAgent(records, options) {
     result.warnings.push("Mapping selected by AI.");
   } else {
     result.warnings.push("AI mapping unavailable.");
-  }
-
-  try {
-    await fsp.mkdir(path.dirname(RAW_FLIGHT_DATA_JSON), { recursive: true });
-    await fsp.writeFile(
-      RAW_FLIGHT_DATA_JSON,
-      JSON.stringify(
-        {
-          savedAt: new Date().toISOString(),
-          ok: result.ok,
-          sourceCount: result.sourceCount,
-          mapping: result.mapping,
-          warnings: result.warnings,
-          standardizedRecords: result.standardizedRecords,
-          llm: result.llm || null,
-        },
-        null,
-        2
-      ),
-      "utf-8"
-    );
-  } catch (_) {
-    /* persistence must not break upload/rebuild */
   }
 
   return result;
