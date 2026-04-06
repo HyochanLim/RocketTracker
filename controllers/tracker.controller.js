@@ -6,7 +6,7 @@ const mongodb = require("mongodb");
 const FlightFile = require("../models/flight-file.model");
 const { parseFlightFileToJson } = require("../logic/parsing/flight-data.parser");
 const { parseRowsWithAiAgent } = require("../logic/parsing/ai-parsing-agent");
-const { saveLastParsedJsonPath, storeAiParsedData, getAiParsedData } = require("../logic/aiAgent/agent");
+const { storeAiParsedData, getAiParsedData } = require("../logic/aiAgent/agent");
 
 function isAjaxRequest(req) {
   return req.xhr || req.get("X-Requested-With") === "XMLHttpRequest";
@@ -85,17 +85,11 @@ async function uploadTrackerFile(req, res, next) {
     const existing = await FlightFile.findByUserAndHash(req.session.uid, fileHash);
     if (existing) {
       fs.unlink(absolutePath, function () {});
-      await saveLastParsedJsonPath(existing.storedPath, {
-        userId: String(req.session.uid),
-        originalName: existing.originalName,
-        recordCount: existing.recordCount,
-        source: "duplicate",
-      });
       try {
         const dupText = await fsp.readFile(path.join(__dirname, "..", existing.storedPath), "utf-8");
         storeAiParsedData(req.session.uid, JSON.parse(dupText));
       } catch (_) {
-        /* pointer만 갱신됨 */
+        /* 중복 파일 메타만 사용; 파싱 JSON 로드 실패 시 세션 메모리 비움 유지 */
       }
       if (isAjaxRequest(req)) {
         return res.json({
@@ -129,13 +123,6 @@ async function uploadTrackerFile(req, res, next) {
     await fsp.writeFile(parsedAbsolutePath, JSON.stringify(standardizedRecords, null, 2), "utf-8");
 
     const relativeStoredPath = path.relative(path.join(__dirname, ".."), parsedAbsolutePath).replace(/\\/g, "/");
-
-    await saveLastParsedJsonPath(relativeStoredPath, {
-      userId: String(req.session.uid),
-      originalName: req.file.originalname,
-      recordCount: standardizedRecords.length,
-      source: "upload",
-    });
 
     const rawDir = path.join(__dirname, "..", "data", "storage", "raw_uploads", req.session.uid);
     await fsp.mkdir(rawDir, { recursive: true });
@@ -233,12 +220,6 @@ async function getFlightData(req, res, next) {
             });
           }
           records = rebuilt;
-          await saveLastParsedJsonPath(sf.storedPath, {
-            userId: String(req.session.uid),
-            originalName: sf.originalName,
-            recordCount: Array.isArray(rebuilt) ? rebuilt.length : null,
-            source: "rebuild",
-          });
         } catch {
           return res.status(404).json({
             ok: false,
@@ -252,12 +233,6 @@ async function getFlightData(req, res, next) {
 
     const payload = recordsFromParsedJsonPayload(records);
     storeAiParsedData(req.session.uid, records);
-    await saveLastParsedJsonPath(sf.storedPath, {
-      userId: String(req.session.uid),
-      originalName: sf.originalName,
-      recordCount: Array.isArray(payload) ? payload.length : null,
-      source: "analyze",
-    });
 
     return res.json({
       ok: true,
