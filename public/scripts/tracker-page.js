@@ -61,6 +61,7 @@
   }
 
   function showInputSection() {
+    window.__trackerActiveFileId = "";
     if (visualizerSection) visualizerSection.classList.add("tracker-hidden-section");
     if (inputSection) inputSection.classList.remove("tracker-hidden-section");
   }
@@ -226,12 +227,14 @@
         }
         setAnalyzeLoading(true, "Loading processed flight data…");
         var uploadedRecords = await getSavedFileRecords(uploaded.file._id);
+        window.__trackerActiveFileId = uploaded.file._id;
         showVisualizerWithRecords(uploadedRecords);
         return;
       }
 
       setAnalyzeLoading(true, "Loading flight data…");
       var savedRecords = await getSavedFileRecords(selectedSavedFileId);
+      window.__trackerActiveFileId = selectedSavedFileId;
       showVisualizerWithRecords(savedRecords);
     } catch (error) {
       showWarning(error && error.message ? error.message : "Failed to prepare analysis.");
@@ -275,20 +278,6 @@
   }
   if (showVisualizerButton) showVisualizerButton.addEventListener("click", handleAnalyzeClick);
   if (backToUploadButton) backToUploadButton.addEventListener("click", showInputSection);
-
-  var agentInput = document.getElementById("tracker-agent-input");
-  var agentSend = document.getElementById("tracker-agent-send");
-  function syncAgentSendState() {
-    if (!agentSend || !agentInput) return;
-    agentSend.disabled = !String(agentInput.value || "").trim();
-  }
-  if (agentInput && agentSend) {
-    agentInput.addEventListener("input", syncAgentSendState);
-    syncAgentSendState();
-    agentSend.addEventListener("click", function () {
-      /* Placeholder until /tracker/agent API exists */
-    });
-  }
 
   updateAnalyzeButtonVisibility();
 })();

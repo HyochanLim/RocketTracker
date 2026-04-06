@@ -4,12 +4,13 @@
     <span class="tracker-agent-header-hint">Tracker</span>
   </header>
   <div class="tracker-agent-thread" id="tracker-agent-thread" role="log" aria-live="polite">
-    <div class="tracker-agent-welcome">
-      <p class="tracker-agent-welcome-title">Flight assistant</p>
+    <div class="tracker-agent-welcome" id="tracker-agent-welcome">
+      <p class="tracker-agent-welcome-title">비행 어시스턴트</p>
       <p class="tracker-agent-welcome-text">
-        Ask about this trajectory, request graphs, or highlight time ranges. Responses will connect here when the agent API is wired up.
+        인사·잡담도 되고, 비행 데이터는 Analyze 후 더 잘 맞춰요.
       </p>
     </div>
+    <div class="tracker-agent-messages" id="tracker-agent-messages" hidden></div>
   </div>
   <div class="tracker-agent-composer">
     <label class="tracker-agent-sr-only" for="tracker-agent-input">Message</label>
@@ -17,7 +18,7 @@
       id="tracker-agent-input"
       class="tracker-agent-input"
       rows="3"
-      placeholder="Ask about this flight… (e.g. plot altitude over time)"
+      placeholder="메시지를 입력…"
       autocomplete="off"
     ></textarea>
     <div class="tracker-agent-composer-actions">

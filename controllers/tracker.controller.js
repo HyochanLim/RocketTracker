@@ -6,7 +6,7 @@ const mongodb = require("mongodb");
 const FlightFile = require("../models/flight-file.model");
 const { parseFlightFileToJson } = require("../logic/parsing/flight-data.parser");
 const { parseRowsWithAiAgent } = require("../logic/parsing/ai-parsing-agent");
-const { saveLastParsedJsonPath, storeAiParsedData } = require("../logic/aiAgent/agent");
+const { saveLastParsedJsonPath, storeAiParsedData, getAiParsedData } = require("../logic/aiAgent/agent");
 
 function isAjaxRequest(req) {
   return req.xhr || req.get("X-Requested-With") === "XMLHttpRequest";
@@ -329,4 +329,91 @@ async function deleteTrackerFile(req, res, next) {
   }
 }
 
-module.exports = { getTracker, uploadTrackerFile, getFlightData, deleteTrackerFile };
+function loadAiAgentConfig() {
+  try {
+    return require("../config/ai-agent.local");
+  } catch {
+    return {};
+  }
+}
+
+function systemPromptTrackerAgent() {
+  return [
+    "너는 Orbit 트래커 옆에서 같이 이야기하는 도우미야.",
+    "인사·일상·가벼운 질문에는 먼저 자연스럽고 친근하게 한국어로 답해.",
+    "비행·궤적·고도 같은 데이터 질문일 때만 /home/user/ai_parsed_data.json 을 열어 참고하고, 짧게 요약해 줘.",
+  ].join(" ");
+}
+
+function trimAgentChatMessages(arr, maxMsgs, maxContentLen) {
+  const slice = Array.isArray(arr) ? arr.slice(-maxMsgs) : [];
+  const out = [];
+  for (let i = 0; i < slice.length; i += 1) {
+    const m = slice[i];
+    if (!m || (m.role !== "user" && m.role !== "assistant")) continue;
+    let c = String(m.content || "").trim();
+    if (!c) continue;
+    const chars = Array.from(c);
+    if (chars.length > maxContentLen) c = chars.slice(0, maxContentLen).join("") + "…";
+    out.push({ role: m.role, content: c });
+  }
+  return out;
+}
+
+/** ai_parsed_data 와 동일 구조를 통째로 JSON 문자열로 (샌드박스에 그대로 기록) */
+function serializeAiParsedForSandbox(aiParsedObj) {
+  if (aiParsedObj == null) return "{}";
+  return JSON.stringify(aiParsedObj);
+}
+
+async function postAgentChat(req, res, next) {
+  if (!isAjaxRequest(req)) {
+    return res.status(400).json({ ok: false, message: "Invalid request." });
+  }
+  try {
+    const cfg = loadAiAgentConfig();
+    if (!cfg.apiKey || !cfg.endpoint || !cfg.model) {
+      return res.status(503).json({ ok: false, message: "AI agent is not configured." });
+    }
+
+    const trimmed = trimAgentChatMessages(req.body && req.body.messages, 20, 600);
+    if (trimmed.length === 0 || trimmed[trimmed.length - 1].role !== "user") {
+      return res.status(422).json({ ok: false, message: "Send messages ending with user." });
+    }
+
+    let aiParsed = getAiParsedData(req.session.uid);
+    const bodyFileId = req.body && req.body.fileId != null ? String(req.body.fileId).trim() : "";
+    if (!aiParsed && bodyFileId && mongodb.ObjectId.isValid(bodyFileId)) {
+      const doc = await FlightFile.findByIdForUser(req.session.uid, bodyFileId);
+      if (!doc) {
+        return res.status(404).json({ ok: false, message: "Saved file not found." });
+      }
+      if (!storagePathBelongsToUser(doc.storedPath, req.session.uid)) {
+        return res.status(403).json({ ok: false, message: "Access denied." });
+      }
+      try {
+        const rawText = await fsp.readFile(path.join(projectRoot, doc.storedPath), "utf-8");
+        const parsedRoot = JSON.parse(rawText);
+        aiParsed = Array.isArray(parsedRoot) ? { records: parsedRoot } : parsedRoot;
+        storeAiParsedData(req.session.uid, parsedRoot);
+      } catch {
+        return res.status(422).json({ ok: false, message: "비행 데이터를 읽을 수 없습니다." });
+      }
+    }
+
+    if (!aiParsed) {
+      aiParsed = {};
+    }
+
+    const aiParsedJson = serializeAiParsedForSandbox(aiParsed);
+    const openAiMessages = [{ role: "system", content: systemPromptTrackerAgent() }].concat(trimmed);
+
+    const { runSandboxChatSession } = require("../logic/aiAgent/e2b-chat.cjs");
+    const text = await runSandboxChatSession(String(req.session.uid), cfg, openAiMessages, aiParsedJson);
+    return res.json({ ok: true, text: text || "" });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getTracker, uploadTrackerFile, getFlightData, deleteTrackerFile, postAgentChat };

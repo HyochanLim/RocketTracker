@@ -99,7 +99,11 @@
           "csrf-token": token,
           "xsrf-token": token,
         },
-        body: JSON.stringify({ _csrf: token, messages: transcript }),
+        body: JSON.stringify({
+          _csrf: token,
+          messages: transcript,
+          fileId: (typeof window !== "undefined" && window.__trackerActiveFileId) || "",
+        }),
       });
       var data = await res.json().catch(function () {
         return {};
