@@ -64,6 +64,9 @@
       selectionIndicator: false,
     });
 
+    // Ease GPU load: render fewer pixels (exclusive upper bound 1). Raise if too soft, lower if still stuttery.
+    viewerInstance.resolutionScale = 0.5;
+
     try {
       var buildingTileset = await Cesium.createOsmBuildingsAsync();
       viewerInstance.scene.primitives.add(buildingTileset);
