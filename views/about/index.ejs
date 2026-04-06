@@ -1,11 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%- include("../shared/head", { pageTitle: "Rocket Tracker | About" }) %>
+  <%- include("../shared/head", { pageTitle: "Orbit | About" }) %>
   <body>
     <%- include("../shared/header") %>
     <main class="container page-panel">
       <header class="about-hero" aria-label="About hero">
-        <div class="about-logo" aria-label="Logo placeholder">ROCKET.TRACKING</div>
+        <div class="about-logo-wrap">
+          <a
+            href="/"
+            class="about-logo-link"
+            aria-label="Orbit home"
+            draggable="false"
+            oncontextmenu="return false;"
+            ondragstart="return false;"
+          >
+            <%- include("../shared/orbit-brand-img", { orbitBrandImgClass: "orbit-brand-img--hero" }) %>
+          </a>
+        </div>
         <div class="about-byline">BY <span class="about-byline-name">Hyochan Lim</span></div>
       </header>
 

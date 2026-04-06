@@ -8,7 +8,7 @@
   /* Surfaces */
   --bg: var(--black);
   --bg-soft: #0a0a0a;
-  --header-surface: rgba(18, 18, 18, 0.92);
+  --header-surface: #010101;
   --overlay-dark: rgba(0, 0, 0, 0.72);
 
   /* Typography */
@@ -266,7 +266,7 @@ a {
   position: relative;
 }
 
-.brand::before {
+.brand:not(.brand--orbit)::before {
   content: "";
   width: 10px;
   height: 10px;
@@ -275,7 +275,32 @@ a {
   box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.12), 0 0 18px rgba(var(--accent-rgb), 0.35);
 }
 
-.brand:hover {
+.brand--orbit::before {
+  content: none;
+}
+
+.brand--orbit {
+  line-height: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+.orbit-brand-img {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  -webkit-touch-callout: none;
+}
+
+.brand--orbit .orbit-brand-img--nav {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+.brand:not(.brand--orbit):hover {
   color: var(--white);
   text-shadow: 0 0 18px rgba(var(--accent-rgb), 0.35);
 }
@@ -910,12 +935,24 @@ input:focus {
   text-align: center;
 }
 
-.about-logo {
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-size: clamp(1.6rem, 4vw, 2.4rem);
-  color: var(--white);
+.about-logo-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.about-logo-link {
+  line-height: 0;
+  display: inline-flex;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+.about-logo-wrap .orbit-brand-img--hero {
+  width: min(520px, 92vw);
+  height: auto;
+  max-height: none;
+  display: block;
 }
 
 .about-byline {

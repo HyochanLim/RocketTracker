@@ -34,7 +34,7 @@ function toDataSvg(svg) {
 
 function getDefaultAvatarUrl(seedValue) {
   // Deterministic random blob for the same seed.
-  const seed = hashStringToUint32(seedValue || "rocket-user");
+  const seed = hashStringToUint32(seedValue || "orbit-user");
   const rng = mulberry32(seed);
 
   const palette = [

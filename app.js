@@ -49,7 +49,7 @@ app.use(errorHandler);
 db.connectToDatabase()
   .then(function () {
     app.listen(3000);
-    console.log("Rocket tracker site running on http://localhost:3000");
+    console.log("Orbit running on http://localhost:3000");
   })
   .catch(function (error) {
     console.error("DB connection failed:", error);

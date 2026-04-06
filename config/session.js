@@ -4,14 +4,14 @@ function createSessionStore(session) {
   const MongoDBStore = mongoDbStore(session);
   return new MongoDBStore({
     uri: "mongodb://localhost:27017",
-    databaseName: "rocket-tracker-site",
+    databaseName: "orbit",
     collection: "sessions",
   });
 }
 
 function createSessionConfig(session) {
   return {
-    secret: "rocket-tracker-site-secret",
+    secret: "orbit-site-secret",
     resave: false,
     saveUninitialized: false,
     store: createSessionStore(session),
