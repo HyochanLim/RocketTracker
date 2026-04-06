@@ -1,7 +1,7 @@
 <header class="site-header">
   <% const safeIsAuth = typeof isAuth === "undefined" ? false : isAuth; %>
   <% const safeUser = typeof user === "undefined" || !user ? { id: "", displayName: "User", imageUrl: "" } : user; %>
-  <nav class="navbar container">
+  <nav class="navbar container" aria-label="Primary">
     <a
       href="/"
       class="brand brand--orbit"
@@ -12,33 +12,39 @@
     >
       <%- include("orbit-brand-img", { orbitBrandImgClass: "orbit-brand-img--nav" }) %>
     </a>
-    <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/about">About</a></li>
-      <% if (!safeIsAuth) { %>
-        <li><a href="/login" class="button button-ghost">Login</a></li>
-        <li><a href="/signup" class="button button-ghost">Sign Up</a></li>
-      <% } else { %>
-        <li><a href="/tracker">Tracker</a></li>
-        <li>
-          <form action="/logout" method="POST" class="nav-inline-form">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-            <button type="submit" class="button button-ghost">Logout</button>
-          </form>
-        </li>
-        <li>
-          <a href="/profile/<%= safeUser.id || '' %>" class="profile-trigger" aria-label="Go to profile">
-            <span class="profile-avatar-wrap" aria-hidden="true">
-              <img
-                class="profile-avatar"
-                src="<%= safeUser.imageUrl || '' %>"
-                alt="Profile avatar"
-              />
-            </span>
-            <span class="profile-name"><%= safeUser.displayName || "User" %></span>
-          </a>
-        </li>
-      <% } %>
+    <ul class="nav-primary">
+      <li><a href="/products">Products</a></li>
+      <li><a href="/pricing">Pricing</a></li>
+      <li><a href="/resources">Resources</a></li>
+      <li><a href="/contact">Contact</a></li>
     </ul>
+    <div class="nav-actions">
+      <ul class="nav-links nav-links--actions">
+        <% if (!safeIsAuth) { %>
+          <li><a href="/login" class="nav-link-muted">Log in</a></li>
+          <li><a href="/signup" class="button button-primary nav-cta">Sign up</a></li>
+        <% } else { %>
+          <li>
+            <form action="/logout" method="POST" class="nav-inline-form">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button type="submit" class="button button-ghost">Log out</button>
+            </form>
+          </li>
+          <li>
+            <a href="/profile/<%= safeUser.id || '' %>" class="profile-trigger" aria-label="Go to profile">
+              <span class="profile-avatar-wrap" aria-hidden="true">
+                <img
+                  class="profile-avatar"
+                  src="<%= safeUser.imageUrl || '' %>"
+                  alt="Profile avatar"
+                />
+              </span>
+              <span class="profile-name"><%= safeUser.displayName || "User" %></span>
+            </a>
+          </li>
+        <% } %>
+      </ul>
+    </div>
   </nav>
 </header>
+<%- include("kofi-widget") %>

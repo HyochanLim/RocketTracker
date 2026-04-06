@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../shared/head", { pageTitle: "Orbit | Products" }) %>
+  <% const safeIsAuth = typeof isAuth === "undefined" ? false : isAuth; %>
+  <body>
+    <%- include("../shared/header") %>
+    <main class="container page-panel marketing-page">
+      <header class="marketing-hero">
+        <p class="marketing-eyebrow">Products</p>
+        <h1>Orbit flight-ops stack</h1>
+        <p class="marketing-lead">
+          Upload raw flight data, visualize trajectory on the globe, inspect attitude in 3D beside the map, and align
+          mission time with an assistant-style ops panel.
+        </p>
+      </header>
+      <section class="marketing-section">
+        <h2>Orbit Tracker</h2>
+        <p>
+          Core web app for ingesting logs, Cesium-based orbit view, and an agent panel for flight-aware Q&amp;A. The
+          default assistant uses a fast, cost-efficient model; <a href="/pricing">Pro</a> unlocks heavier models (Claude /
+          flagship-class) and persistent chat history for deep reviews.
+        </p>
+        <p class="marketing-cta-row">
+          <% if (safeIsAuth) { %>
+            <a href="/tracker" class="button button-primary">Open tracker</a>
+          <% } else { %>
+            <a href="/signup" class="button button-primary">Get started</a>
+          <% } %>
+          <a href="/pricing" class="button button-secondary">Agent &amp; pricing</a>
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

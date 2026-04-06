@@ -12,6 +12,22 @@ function getAbout(req, res) {
   res.render("about/index");
 }
 
+function getProducts(req, res) {
+  res.render("products/index");
+}
+
+function getPricing(req, res) {
+  res.render("pricing/index");
+}
+
+function getResources(req, res) {
+  res.render("resources/index");
+}
+
+function getContact(req, res) {
+  res.render("contact/index");
+}
+
 function isAjaxRequest(req) {
   return req.xhr || req.get("X-Requested-With") === "XMLHttpRequest";
 }
@@ -110,4 +126,14 @@ async function updateProfile(req, res, next) {
   }
 }
 
-module.exports = { getHome, getAbout, redirectOwnProfile, getProfile, updateProfile };
+module.exports = {
+  getHome,
+  getAbout,
+  getProducts,
+  getPricing,
+  getResources,
+  getContact,
+  redirectOwnProfile,
+  getProfile,
+  updateProfile,
+};

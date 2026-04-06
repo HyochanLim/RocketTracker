@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+  <%- include("../shared/head", { pageTitle: "Orbit | Pricing" }) %>
+
+  <body>
+
+    <%- include("../shared/header") %>
+
+    <main class="container page-panel marketing-page marketing-page--pricing">
+
+      <p class="marketing-eyebrow marketing-eyebrow--pricing-cards">Pricing</p>
+
+      <header class="marketing-hero marketing-hero--pricing-top">
+
+        <h1>Explorer and Pro</h1>
+
+        <p class="marketing-lead">
+
+          <strong>Explorer</strong> is free: full tracker and assistant on a compact model.
+
+          <strong>Pro</strong> is paid: same product with heavier models and persistent chat history.
+
+          Details are in the cards below.
+
+        </p>
+
+      </header>
+
+      <section class="marketing-pricing-grid marketing-pricing-grid--top" aria-label="Plans and actions">
+
+        <article class="marketing-price-card">
+
+          <h2>Explorer</h2>
+
+          <p class="marketing-price">Free</p>
+
+          <p>Start with the full tracker and the compact-model assistant—no card required.</p>
+
+          <ul class="marketing-list">
+
+            <li>Mission-style agent on an efficient model</li>
+
+            <li>Rate limits aimed at individual exploration</li>
+
+            <li>Upgrade anytime if you outgrow “quick answers”</li>
+
+          </ul>
+
+          <a href="/signup" class="button button-secondary">Get started</a>
+
+        </article>
+
+
+
+        <article class="marketing-price-card marketing-price-card--featured">
+
+          <h2>Pro</h2>
+
+          <p class="marketing-price">$7 <span class="marketing-price-period">/ month</span></p>
+
+          <p>Frontier models, stronger reasoning, and persistent history for serious flight and ops analysis.</p>
+
+          <ul class="marketing-list">
+
+            <li>Pro model access in the same agent panel (fair-use per month at launch)</li>
+
+            <li><strong>Persistent chat history</strong> across sessions, tied to your flights</li>
+
+            <li>Room for longer investigations before you hit limits</li>
+
+          </ul>
+
+          <a href="/contact" class="button button-primary">Purchase</a>
+
+        </article>
+
+        <!--
+
+          Future: third pricing column (e.g. token / usage add-on or enterprise).
+
+          Grid already uses auto-fit; drop another <article class="marketing-price-card"> here.
+
+        -->
+
+      </section>
+
+    </main>
+
+  </body>
+
+</html>
+

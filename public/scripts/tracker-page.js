@@ -24,7 +24,6 @@
     analyzeLoading.classList.toggle("tracker-hidden-section", !active);
     analyzeLoading.setAttribute("aria-hidden", active ? "false" : "true");
     if (showVisualizerButton) showVisualizerButton.disabled = !!active;
-    document.body.style.overflow = active ? "hidden" : "";
   }
 
   function updateAnalyzeButtonVisibility() {

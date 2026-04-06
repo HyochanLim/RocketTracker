@@ -20,7 +20,6 @@
     modal.setAttribute("aria-hidden", open ? "false" : "true");
 
     document.body.classList.toggle("about-modal-open", open);
-    document.body.style.overflow = open ? "hidden" : "";
 
     if (open) {
       lastFocused = document.activeElement;
