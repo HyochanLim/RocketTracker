@@ -18,6 +18,7 @@ config/cesium-ion.local.js
 
 # Last AI-parsed flight snapshot (for agent sandbox)
 logic/aiAgent/rawFlightData.json
+logic/aiAgent/last-parsed-flight*.json
 
 # Uploaded user files (optional: keep folder, ignore contents)
 uploads/avatars/*

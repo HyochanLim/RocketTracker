@@ -6,6 +6,7 @@ const mongodb = require("mongodb");
 const FlightFile = require("../models/flight-file.model");
 const { parseFlightFileToJson } = require("../logic/parsing/flight-data.parser");
 const { parseRowsWithAiAgent } = require("../logic/parsing/ai-parsing-agent");
+const { saveLastParsedJsonPath, storeAiParsedData } = require("../logic/aiAgent/agent");
 
 function isAjaxRequest(req) {
   return req.xhr || req.get("X-Requested-With") === "XMLHttpRequest";
@@ -84,6 +85,18 @@ async function uploadTrackerFile(req, res, next) {
     const existing = await FlightFile.findByUserAndHash(req.session.uid, fileHash);
     if (existing) {
       fs.unlink(absolutePath, function () {});
+      await saveLastParsedJsonPath(existing.storedPath, {
+        userId: String(req.session.uid),
+        originalName: existing.originalName,
+        recordCount: existing.recordCount,
+        source: "duplicate",
+      });
+      try {
+        const dupText = await fsp.readFile(path.join(__dirname, "..", existing.storedPath), "utf-8");
+        storeAiParsedData(req.session.uid, JSON.parse(dupText));
+      } catch (_) {
+        /* pointer만 갱신됨 */
+      }
       if (isAjaxRequest(req)) {
         return res.json({
           ok: true,
@@ -117,6 +130,13 @@ async function uploadTrackerFile(req, res, next) {
 
     const relativeStoredPath = path.relative(path.join(__dirname, ".."), parsedAbsolutePath).replace(/\\/g, "/");
 
+    await saveLastParsedJsonPath(relativeStoredPath, {
+      userId: String(req.session.uid),
+      originalName: req.file.originalname,
+      recordCount: standardizedRecords.length,
+      source: "upload",
+    });
+
     const rawDir = path.join(__dirname, "..", "data", "storage", "raw_uploads", req.session.uid);
     await fsp.mkdir(rawDir, { recursive: true });
     const rawExt = path.extname(req.file.originalname || "").toLowerCase() || ".dat";
@@ -138,6 +158,8 @@ async function uploadTrackerFile(req, res, next) {
       recordCount: Array.isArray(standardizedRecords) ? standardizedRecords.length : 0,
       createdAt: new Date(),
     });
+
+    storeAiParsedData(req.session.uid, standardizedRecords);
 
     if (isAjaxRequest(req)) {
       return res.json({
@@ -188,6 +210,12 @@ async function getFlightData(req, res, next) {
     if (!sf) {
       return res.status(500).json({ ok: false, message: "Flight file context missing." });
     }
+    if (!storagePathBelongsToUser(sf.storedPath, req.session.uid)) {
+      return res.status(403).json({ ok: false, message: "Access denied." });
+    }
+    if (sf.rawStoredPath && !storagePathBelongsToUser(sf.rawStoredPath, req.session.uid)) {
+      return res.status(403).json({ ok: false, message: "Access denied." });
+    }
 
     const parsedAbs = path.join(projectRoot, sf.storedPath);
     let records;
@@ -205,6 +233,12 @@ async function getFlightData(req, res, next) {
             });
           }
           records = rebuilt;
+          await saveLastParsedJsonPath(sf.storedPath, {
+            userId: String(req.session.uid),
+            originalName: sf.originalName,
+            recordCount: Array.isArray(rebuilt) ? rebuilt.length : null,
+            source: "rebuild",
+          });
         } catch {
           return res.status(404).json({
             ok: false,
@@ -216,13 +250,22 @@ async function getFlightData(req, res, next) {
       }
     }
 
+    const payload = recordsFromParsedJsonPayload(records);
+    storeAiParsedData(req.session.uid, records);
+    await saveLastParsedJsonPath(sf.storedPath, {
+      userId: String(req.session.uid),
+      originalName: sf.originalName,
+      recordCount: Array.isArray(payload) ? payload.length : null,
+      source: "analyze",
+    });
+
     return res.json({
       ok: true,
       file: {
         _id: sf.id,
         originalName: sf.originalName,
       },
-      records: recordsFromParsedJsonPayload(records),
+      records: payload,
     });
   } catch (error) {
     next(error);
@@ -234,6 +277,18 @@ function isSafeRelativeStoragePath(rel) {
   if (rel.includes("..")) return false;
   if (path.isAbsolute(rel)) return false;
   return true;
+}
+
+/** 저장소 경로가 해당 로그인 사용자 전용 폴더 아래인지 (다른 계정 데이터 접근 차단) */
+function storagePathBelongsToUser(rel, sessionUid) {
+  if (!isSafeRelativeStoragePath(rel)) return false;
+  const uid = String(sessionUid || "");
+  if (!uid) return false;
+  const norm = String(rel).replace(/\\/g, "/");
+  return (
+    norm.startsWith("data/storage/parsed_json/" + uid + "/") ||
+    norm.startsWith("data/storage/raw_uploads/" + uid + "/")
+  );
 }
 
 async function unlinkIfExists(absPath) {
@@ -257,8 +312,8 @@ async function deleteTrackerFile(req, res, next) {
     const relPaths = [sf.storedPath, sf.rawStoredPath].filter(Boolean);
     for (let i = 0; i < relPaths.length; i += 1) {
       const rel = relPaths[i];
-      if (!isSafeRelativeStoragePath(rel)) {
-        return res.status(500).json({ ok: false, message: "Invalid stored path." });
+      if (!storagePathBelongsToUser(rel, req.session.uid)) {
+        return res.status(403).json({ ok: false, message: "Access denied." });
       }
       await unlinkIfExists(path.join(projectRoot, rel));
     }
