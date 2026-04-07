@@ -89,7 +89,7 @@ async function uploadTrackerFile(req, res, next) {
         const dupText = await fsp.readFile(path.join(__dirname, "..", existing.storedPath), "utf-8");
         storeAiParsedData(req.session.uid, JSON.parse(dupText));
       } catch (_) {
-        /* 중복 파일 메타만 사용; 파싱 JSON 로드 실패 시 세션 메모리 비움 유지 */
+        /* Duplicate file metadata only; on parse load failure leave session memory cleared */
       }
       if (isAjaxRequest(req)) {
         return res.json({
@@ -254,7 +254,7 @@ function isSafeRelativeStoragePath(rel) {
   return true;
 }
 
-/** 저장소 경로가 해당 로그인 사용자 전용 폴더 아래인지 (다른 계정 데이터 접근 차단) */
+/** Whether storage path is under the signed-in user’s folder (blocks cross-account access) */
 function storagePathBelongsToUser(rel, sessionUid) {
   if (!isSafeRelativeStoragePath(rel)) return false;
   const uid = String(sessionUid || "");
@@ -314,9 +314,9 @@ function loadAiAgentConfig() {
 
 function systemPromptTrackerAgent() {
   return [
-    "너는 Orbit 트래커 옆에서 같이 이야기하는 도우미야.",
-    "인사·일상·가벼운 질문에는 먼저 자연스럽고 친근하게 한국어로 답해.",
-    "비행·궤적·고도 같은 데이터 질문일 때만 /home/user/ai_parsed_data.json 을 열어 참고하고, 짧게 요약해 줘.",
+    "You are a helpful copilot next to the Orbit flight tracker.",
+    "For greetings, small talk, and light questions, reply naturally and concisely in English.",
+    "Only for flight, trajectory, altitude, or telemetry questions, open /home/user/ai_parsed_data.json, use it as context, and answer briefly.",
   ].join(" ");
 }
 
@@ -335,7 +335,7 @@ function trimAgentChatMessages(arr, maxMsgs, maxContentLen) {
   return out;
 }
 
-/** ai_parsed_data 와 동일 구조를 통째로 JSON 문자열로 (샌드박스에 그대로 기록) */
+/** Same shape as ai_parsed_data, serialized for the sandbox file */
 function serializeAiParsedForSandbox(aiParsedObj) {
   if (aiParsedObj == null) return "{}";
   return JSON.stringify(aiParsedObj);
@@ -372,7 +372,7 @@ async function postAgentChat(req, res, next) {
         aiParsed = Array.isArray(parsedRoot) ? { records: parsedRoot } : parsedRoot;
         storeAiParsedData(req.session.uid, parsedRoot);
       } catch {
-        return res.status(422).json({ ok: false, message: "비행 데이터를 읽을 수 없습니다." });
+        return res.status(422).json({ ok: false, message: "Could not read flight data." });
       }
     }
 

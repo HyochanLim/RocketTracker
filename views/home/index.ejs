@@ -49,62 +49,160 @@
         </section>
         <aside class="hero-landing-aside">
           <figure class="hero-orbit-panel">
-            <figcaption class="hero-orbit-title">At a glance</figcaption>
-            <div class="hero-orbit-svg-wrap">
+            <figcaption class="hero-orbit-title">Chat · trajectory review</figcaption>
+            <div class="hero-orbit-svg-wrap hero-collab-wrap">
+              <div
+                class="hero-collab-chat"
+                role="group"
+                aria-label="Illustrative flight-ops chat: plotting altitude, correcting fusion, adding MET markers."
+              >
+                <div class="hero-collab-bubble hero-collab-bubble--user hero-collab-bubble--s1">
+                  <span class="hero-collab-bubble__meta">You</span>
+                  <p class="hero-collab-bubble__text">
+                    Plot rocket altitude vs. MET from this TeleMega log—trajectory only, English labels.
+                  </p>
+                </div>
+                <div class="hero-collab-bubble hero-collab-bubble--ai hero-collab-bubble--s2">
+                  <span class="hero-collab-bubble__meta">Model</span>
+                  <p class="hero-collab-bubble__text">
+                    First pass plotted. Boost is noisy on baro; coast looks plausible. Say the word if you want sensor fusion.
+                  </p>
+                </div>
+                <div class="hero-collab-bubble hero-collab-bubble--user hero-collab-bubble--s3">
+                  <span class="hero-collab-bubble__meta">You</span>
+                  <p class="hero-collab-bubble__text">
+                    Hold on—that dip right after apogee doesn’t match GPS. Re-blend baro with GPS, tighten the EKF innovation gate, and redraw the profile.
+                  </p>
+                </div>
+                <div class="hero-collab-bubble hero-collab-bubble--ai hero-collab-bubble--s4">
+                  <span class="hero-collab-bubble__meta">Model</span>
+                  <p class="hero-collab-bubble__text">
+                    Regenerated with GPS/baro fusion and a stricter gate—the spurious notch is gone; coast tracks your ground truth better.
+                  </p>
+                </div>
+                <div class="hero-collab-bubble hero-collab-bubble--user hero-collab-bubble--s5">
+                  <span class="hero-collab-bubble__meta">You</span>
+                  <p class="hero-collab-bubble__text">
+                    Nice. Add vertical MET markers for staging burn-out and apogee so it matches the tracker timeline.
+                  </p>
+                </div>
+                <div class="hero-collab-bubble hero-collab-bubble--ai hero-collab-bubble--s6">
+                  <span class="hero-collab-bubble__meta">Model</span>
+                  <p class="hero-collab-bubble__text">
+                    Markers pinned at your event table—T+ synced to the same mission clock as the globe view.
+                  </p>
+                </div>
+              </div>
               <svg
-                class="hero-orbit-svg"
-                viewBox="0 0 320 276"
+                class="hero-orbit-svg hero-collab-svg"
+                viewBox="0 0 320 220"
                 xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
+                role="img"
+                aria-label="Monochrome animation: operator and AI discuss flight data; draft altitude profile is corrected and annotated with MET markers."
               >
                 <defs>
-                  <linearGradient id="heroEarthGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="rgba(255,255,255,0.2)" />
-                    <stop offset="55%" stop-color="rgba(255,255,255,0.06)" />
-                    <stop offset="100%" stop-color="rgba(255,255,255,0.03)" />
+                  <linearGradient id="heroCollabGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="rgba(255,255,255,0)" />
+                    <stop offset="45%" stop-color="rgba(255,255,255,0.14)" />
+                    <stop offset="100%" stop-color="rgba(255,255,255,0)" />
                   </linearGradient>
-                  <clipPath id="heroEarthClip">
-                    <circle cx="160" cy="218" r="46" />
-                  </clipPath>
                 </defs>
-                <g opacity="0.35" stroke="rgba(255,255,255,0.35)" fill="none">
-                  <line x1="24" y1="92" x2="296" y2="92" stroke-width="0.5" />
-                  <line x1="24" y1="138" x2="296" y2="138" stroke-width="0.5" />
-                  <line x1="84" y1="32" x2="84" y2="248" stroke-width="0.5" />
-                  <line x1="160" y1="32" x2="160" y2="248" stroke-width="0.5" />
-                  <line x1="236" y1="32" x2="236" y2="248" stroke-width="0.5" />
+                <g opacity="0.35" stroke="rgba(255,255,255,0.3)" fill="none" aria-hidden="true">
+                  <line x1="20" y1="48" x2="300" y2="48" stroke-width="0.5" />
+                  <line x1="20" y1="86" x2="300" y2="86" stroke-width="0.5" />
+                  <line x1="20" y1="124" x2="300" y2="124" stroke-width="0.5" />
+                  <line x1="20" y1="162" x2="300" y2="162" stroke-width="0.5" />
+                  <line x1="56" y1="28" x2="56" y2="178" stroke-width="0.5" />
+                  <line x1="124" y1="28" x2="124" y2="178" stroke-width="0.5" />
+                  <line x1="192" y1="28" x2="192" y2="178" stroke-width="0.5" />
+                  <line x1="260" y1="28" x2="260" y2="178" stroke-width="0.5" />
                 </g>
-                <g transform="translate(160 122) rotate(-16)">
-                  <ellipse
-                    rx="118"
-                    ry="48"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.14)"
-                    stroke-width="1"
-                    stroke-dasharray="5 7"
-                  />
-                  <ellipse
-                    rx="118"
-                    ry="48"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.55)"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    pathLength="100"
-                    stroke-dasharray="34 66"
-                  />
+                <rect
+                  x="40"
+                  y="36"
+                  width="240"
+                  height="148"
+                  rx="3"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.14)"
+                  stroke-width="1"
+                  aria-hidden="true"
+                />
+                <text
+                  class="hero-collab-label"
+                  x="48"
+                  y="50"
+                  fill="rgba(255,255,255,0.4)"
+                  font-size="9"
+                  font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+                  letter-spacing="0.12em"
+                >
+                  ALT (m) · VS MET
+                </text>
+                <!-- Draft profile: spurious dip after apogee (baro artifact) -->
+                <path
+                  class="hero-collab-draft"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.72)"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  pathLength="100"
+                  stroke-dasharray="100"
+                  stroke-dashoffset="100"
+                  d="M 44 162 C 82 162, 98 128, 124 92 C 148 64, 172 70, 182 88 C 192 118, 198 108, 212 98 C 228 86, 248 118, 276 150"
+                  aria-hidden="true"
+                />
+                <!-- Fused / corrected profile -->
+                <path
+                  class="hero-collab-refined"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.95)"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  pathLength="100"
+                  stroke-dasharray="100"
+                  stroke-dashoffset="100"
+                  d="M 44 162 C 88 162, 104 124, 132 90 C 156 62, 188 66, 212 92 C 232 112, 252 132, 276 150"
+                  aria-hidden="true"
+                />
+                <g class="hero-collab-markers" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1" stroke-dasharray="3 4" aria-hidden="true">
+                  <line class="hero-collab-marker hero-collab-marker--a" x1="118" y1="42" x2="118" y2="168" />
+                  <line class="hero-collab-marker hero-collab-marker--b" x1="168" y1="42" x2="168" y2="168" />
                 </g>
-                <circle cx="160" cy="218" r="46" fill="url(#heroEarthGrad)" stroke="rgba(255,255,255,0.18)" stroke-width="1" />
-                <g clip-path="url(#heroEarthClip)">
-                  <path
-                    d="M 118 236 Q 160 200 202 236"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.12)"
-                    stroke-width="1.2"
-                  />
-                </g>
-                <circle class="hero-orbit-vehicle" cx="252" cy="86" r="5.5" fill="#ffffff" opacity="0.95" />
-                <circle cx="252" cy="86" r="10" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1" />
+                <text
+                  class="hero-collab-marker-label hero-collab-marker-label--a"
+                  x="118"
+                  y="186"
+                  text-anchor="middle"
+                  fill="rgba(255,255,255,0.38)"
+                  font-size="7.5"
+                  font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+                  letter-spacing="0.08em"
+                >
+                  STAGING
+                </text>
+                <text
+                  class="hero-collab-marker-label hero-collab-marker-label--b"
+                  x="168"
+                  y="186"
+                  text-anchor="middle"
+                  fill="rgba(255,255,255,0.38)"
+                  font-size="7.5"
+                  font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+                  letter-spacing="0.08em"
+                >
+                  APOGEE
+                </text>
+                <rect
+                  x="92"
+                  y="198"
+                  width="136"
+                  height="14"
+                  fill="url(#heroCollabGrad)"
+                  aria-hidden="true"
+                />
               </svg>
             </div>
             <div class="hero-orbit-blocks">

@@ -55,7 +55,7 @@
       animation: false,
       timeline: false,
       geocoder: false,
-      homeButton: true,
+      homeButton: false,
       sceneModePicker: false,
       baseLayerPicker: false,
       navigationHelpButton: false,

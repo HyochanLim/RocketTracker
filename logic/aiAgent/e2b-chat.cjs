@@ -1,5 +1,5 @@
 /**
- * E2B 샌드박스: 데이터 파일 올린 뒤 runCode 로 OpenAI 호출
+ * E2B sandbox: upload data files then call OpenAI via runCode.
  * @see https://e2b.dev/docs/code-interpreting/analyze-data-with-ai
  */
 const fs = require("fs");

@@ -1,4 +1,4 @@
-// 계정 생성 시 랜덤으로 생성되는 이미지
+// Deterministic placeholder image generated for new accounts
 function hashStringToUint32(str) {
   const s = String(str || "");
   // FNV-1a 32-bit

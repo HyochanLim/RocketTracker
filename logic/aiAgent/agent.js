@@ -1,11 +1,11 @@
 /**
- * 계정별 마지막 AI 파싱 JSON (객체). 키 = userId 문자열.
- * 표준 저장은 레코드 배열이므로 보통 `{ records: [...] }`.
- * 프로세스 메모리만 사용; 재시작 시 비움.
+ * Per-account last AI-parsed JSON (object). Keys are userId strings.
+ * Normal storage is a record array, often wrapped as `{ records: [...] }`.
+ * In-process memory only; cleared on restart.
  */
 const ai_parsed_data = Object.create(null);
 
-/** @param {unknown} parsed JSON.parse 결과 또는 레코드 배열 */
+/** @param {unknown} parsed Result of JSON.parse or a record array */
 function storeAiParsedData(userId, parsed) {
   const id = String(userId || "").trim();
   if (!id || parsed == null) return;

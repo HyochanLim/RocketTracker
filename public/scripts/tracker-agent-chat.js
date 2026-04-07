@@ -1,6 +1,6 @@
 /**
- * Tracker 에이전트 패널 — 다턴 대화. 서버가 system + flight context 를 붙이고
- * user/assistant 히스토리를 샌드박스 LLM 에 전달.
+ * Tracker agent panel — multi-turn chat. Server adds system + flight context and
+ * forwards user/assistant history to the sandbox LLM.
  */
 (function () {
   var thread = document.getElementById("tracker-agent-thread");
@@ -78,7 +78,7 @@
     if (!text || busy) return;
     var token = csrfEl ? csrfEl.value : "";
     if (!token) {
-      appendBubble("assistant", "CSRF 토큰이 없습니다. 페이지를 새로고침하세요.");
+      appendBubble("assistant", "Missing CSRF token. Refresh the page and try again.");
       return;
     }
 
@@ -110,17 +110,17 @@
       });
       removeNode(typingId);
       if (!res.ok || !data.ok) {
-        var err = data.message || "요청 실패 (" + res.status + ")";
+        var err = data.message || "Request failed (" + res.status + ")";
         appendBubble("assistant", err);
         transcript.pop();
         return;
       }
-      var reply = String(data.text || "").trim() || "(빈 응답)";
+      var reply = String(data.text || "").trim() || "(empty reply)";
       transcript.push({ role: "assistant", content: reply });
       appendBubble("assistant", reply);
     } catch (e) {
       removeNode(typingId);
-      appendBubble("assistant", "네트워크 오류: " + (e.message || String(e)));
+      appendBubble("assistant", "Network error: " + (e.message || String(e)));
       transcript.pop();
     } finally {
       busy = false;

@@ -58,37 +58,8 @@
     return flat;
   }
 
-  function ensureScratchHud() {
-    var section = document.getElementById("trackerVisualizerSection");
-    if (!section) return null;
-    if (!section.style.position) section.style.position = "relative";
-
-    var el = document.getElementById("trajectory-scratch-hud");
-    if (el) return el;
-    el = document.createElement("div");
-    el.id = "trajectory-scratch-hud";
-    el.setAttribute("aria-live", "polite");
-    el.style.cssText =
-      "position:absolute;top:10px;left:10px;z-index:3;padding:8px 12px;" +
-      "background:rgba(0,0,0,0.92);color:#39ff14;font:13px/1.4 system-ui,sans-serif;" +
-      "border-radius:10px;border:1px solid rgba(57,255,20,0.45);pointer-events:none;";
-    var container = document.getElementById("cesiumContainer");
-    if (container && container.parentNode) {
-      container.parentNode.insertBefore(el, container);
-    } else {
-      section.insertBefore(el, section.firstChild);
-    }
-    return el;
-  }
-
   function applyTrajectoryScratch(viewer, records) {
     var list = Array.isArray(records) ? records : [];
-    var n = list.length;
-
-    var hud = ensureScratchHud();
-    if (hud) {
-      hud.textContent = "trajectory.js · rows: " + n;
-    }
 
     if (!viewer || typeof Cesium === "undefined") return;
 
