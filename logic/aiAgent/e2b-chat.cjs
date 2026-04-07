@@ -1,9 +1,7 @@
-/**
- * E2B sandbox: upload data files then call OpenAI via runCode.
- * @see https://e2b.dev/docs/code-interpreting/analyze-data-with-ai
- */
 const fs = require("fs");
 const path = require("path");
+
+const USER_AGENT_SYSTEM_PROMPT = "";
 
 const repoRoot = path.join(__dirname, "..", "..");
 const sandboxesByUserId = new Map();
@@ -25,51 +23,95 @@ function e2bApiKey() {
   return "";
 }
 
-const OPENAI_CALL_PY = `
-import json, os, urllib.request
-with open("/home/user/openai_messages.json", encoding="utf-8") as f:
-    messages = json.load(f)
-body = {"model": os.environ["OPENAI_MODEL"], "messages": messages, "max_completion_tokens": 1200}
-req = urllib.request.Request(
-    os.environ["OPENAI_CHAT_URL"],
-    data=json.dumps(body).encode("utf-8"),
-    headers={"Content-Type": "application/json", "Authorization": "Bearer " + os.environ["OPENAI_API_KEY"]},
-    method="POST",
-)
-with urllib.request.urlopen(req, timeout=120) as resp:
-    out = json.loads(resp.read().decode("utf-8"))
-print(out["choices"][0]["message"].get("content") or "")
-`.trim();
+function messagesWithSystem(openAiMessages) {
+  const list = Array.isArray(openAiMessages) ? openAiMessages.filter(Boolean) : [];
+  const sys = String(USER_AGENT_SYSTEM_PROMPT || "").trim();
+  if (!sys) return list;
+  const rest = list.filter((m) => m.role !== "system");
+  return [{ role: "system", content: sys }].concat(rest);
+}
 
-async function runSandboxChatSession(userId, openaiCfg, openAiMessages, aiParsedDataJson) {
+function extractPythonBlocks(text) {
+  const re = /```(?:python|py)\s*([\s\S]*?)```/gi;
+  const out = [];
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const code = m[1].trim();
+    if (code) out.push(code);
+  }
+  return out;
+}
+
+function stripPythonBlocks(text) {
+  return String(text || "")
+    .replace(/```(?:python|py)\s*[\s\S]*?```/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+async function openAiComplete(cfg, messages) {
+  const res = await fetch(String(cfg.endpoint).trim(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${String(cfg.apiKey).trim()}`,
+    },
+    body: JSON.stringify({
+      model: String(cfg.model).trim(),
+      messages,
+      max_completion_tokens: 1200,
+    }),
+  });
+  const raw = await res.text();
+  if (!res.ok) throw new Error(`OpenAI request failed (${res.status}): ${raw.slice(0, 400)}`);
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error("OpenAI response was not JSON.");
+  }
+  const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  return String(content == null ? "" : content).trim();
+}
+
+async function getOrCreateSandbox(userId) {
   const uid = String(userId || "").trim();
   const key = e2bApiKey();
-  if (!key) throw new Error("E2B_API_KEY missing");
-
+  if (!key) throw new Error("E2B_API_KEY missing (needed to run Python).");
   let box = sandboxesByUserId.get(uid);
   if (!box) {
     const { Sandbox } = await import("@e2b/code-interpreter");
-    box = await Sandbox.create({
-      apiKey: key,
-      envs: {
-        OPENAI_API_KEY: String(openaiCfg.apiKey).trim(),
-        OPENAI_CHAT_URL: String(openaiCfg.endpoint).trim(),
-        OPENAI_MODEL: String(openaiCfg.model).trim(),
-      },
-      timeoutMs: TIMEOUT_MS,
-    });
+    box = await Sandbox.create({ apiKey: key, timeoutMs: TIMEOUT_MS });
     sandboxesByUserId.set(uid, box);
   }
+  return box;
+}
 
+async function runPythonInSandbox(userId, code, aiParsedDataJson) {
+  const box = await getOrCreateSandbox(userId);
   await box.files.write("/home/user/ai_parsed_data.json", aiParsedDataJson || "{}");
-  await box.files.write("/home/user/openai_messages.json", JSON.stringify(openAiMessages));
+  const exec = await box.runCode(code);
+  if (exec.error) throw new Error(exec.error.message || String(exec.error));
+  const stdout = (exec.logs && exec.logs.stdout && exec.logs.stdout.join("\n")) || "";
+  const stderr = (exec.logs && exec.logs.stderr && exec.logs.stderr.join("\n")) || "";
+  return { stdout: stdout.trim(), stderr: stderr.trim() };
+}
 
-  const exec = await box.runCode(OPENAI_CALL_PY);
-  if (exec.error) {
-    throw new Error(exec.error.message || String(exec.error));
+async function runSandboxChatSession(userId, openaiCfg, openAiMessages, aiParsedDataJson) {
+  const messages = messagesWithSystem(openAiMessages);
+  if (messages.length === 0) throw new Error("No messages.");
+
+  const reply = await openAiComplete(openaiCfg, messages);
+  const blocks = extractPythonBlocks(reply);
+  if (blocks.length === 0) return reply;
+
+  let out = stripPythonBlocks(reply);
+  for (let i = 0; i < blocks.length; i += 1) {
+    const { stdout, stderr } = await runPythonInSandbox(userId, blocks[i], aiParsedDataJson);
+    const tail = [stdout && `Output:\n${stdout}`, stderr && `Stderr:\n${stderr}`].filter(Boolean).join("\n\n") || "(no output)";
+    out = (out ? `${out}\n\n` : "") + tail;
   }
-  const out = (exec.logs && exec.logs.stdout && exec.logs.stdout.join("\n")) || "";
   return out.trim();
 }
 
-module.exports = { runSandboxChatSession };
+module.exports = { runSandboxChatSession, USER_AGENT_SYSTEM_PROMPT };

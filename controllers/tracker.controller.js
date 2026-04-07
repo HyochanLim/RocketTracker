@@ -312,14 +312,6 @@ function loadAiAgentConfig() {
   }
 }
 
-function systemPromptTrackerAgent() {
-  return [
-    "You are a helpful copilot next to the Orbit flight tracker.",
-    "For greetings, small talk, and light questions, reply naturally and concisely in English.",
-    "Only for flight, trajectory, altitude, or telemetry questions, open /home/user/ai_parsed_data.json, use it as context, and answer briefly.",
-  ].join(" ");
-}
-
 function trimAgentChatMessages(arr, maxMsgs, maxContentLen) {
   const slice = Array.isArray(arr) ? arr.slice(-maxMsgs) : [];
   const out = [];
@@ -381,7 +373,7 @@ async function postAgentChat(req, res, next) {
     }
 
     const aiParsedJson = serializeAiParsedForSandbox(aiParsed);
-    const openAiMessages = [{ role: "system", content: systemPromptTrackerAgent() }].concat(trimmed);
+    const openAiMessages = trimmed;
 
     const { runSandboxChatSession } = require("../logic/aiAgent/e2b-chat.cjs");
     const text = await runSandboxChatSession(String(req.session.uid), cfg, openAiMessages, aiParsedJson);
