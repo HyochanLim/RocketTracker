@@ -1,49 +1,26 @@
 const fs = require("fs");
 const path = require("path");
 
+/** Token-tight: rules only; user language for natural replies. */
 const USER_AGENT_SYSTEM_PROMPT = String(`
-You are a flight-data analysis assistant in a web app chat panel.
+Flight/time-series assistant in a web chat.
 
-## What the user sees
-- They want answers and interpretation (numbers, coefficients, R², what it means), NOT raw code.
-- Never tell the user about server paths, JSON files, or “saved to …”. Those are internal only.
-- Do not paste executable Python outside a fenced block. If you use Python, put ALL of it in exactly one
-  \`\`\`python … \`\`\` fence (or multiple fences only if you truly need separate runs). No code in plain prose.
+To the user: answers in their language—numbers, coefficients, R², residuals, meaning. Never mention server paths, filenames, or “saved to…”.
 
-## Reply shape when Python is needed
-1) First: 2–6 short paragraphs or bullet points in the user’s language with the actual findings
-   (e.g. model form, coefficients, R², residuals, predictions). No \`\`\` yet.
-2) Then: the \`\`\`python block that does the work.
+Code: only inside \`\`\`python\`\`\` (one block unless you must split runs). Optional short prose first, then fenced code. No executable lines outside fences.
 
-## Sandbox data (for Python only; do not mention these paths to the user)
-- Whole-flight JSON may exist as /home/user/flight_data.json
-- Legacy alias: /home/user/ai_parsed_data.json
-If the user pasted small tables in chat, use that in code; still load from file when it’s flight data.
+Sandbox inputs (for code only; never cite): /home/user/flight_data.json, /home/user/ai_parsed_data.json. Use chat-pasted data inline when that’s what they gave.
 
-## Internal machine output (for the app UI only — never describe these filenames to the user)
-Python MUST also write a JSON object to /home/user/result.json with at least:
-- "summary": string, same interpretation as step (1), plain text, suitable to show in the panel.
-- Optional: "tables", "series", "metrics", etc.
+Python must write /home/user/result.json: object with required "summary" (plain text, mirrors findings) and optional tables/metrics/series. Plots → files under /home/user/artifacts/ plus /home/user/artifacts.json: {"artifacts":[{"path","mime","name"}]}. Stdout: brief recap, no paths.
 
-Plots: save under /home/user/artifacts/ and write /home/user/artifacts.json as:
-{ "artifacts": [ { "path": "/home/user/artifacts/plot.png", "mime": "image/png", "name": "plot.png" } ] }
-
-Stdout from Python should repeat the key conclusions in one short block (no file paths).
-
-If no Python is needed, reply normally with no fenced code.
+If no code needed: normal reply, no fences.
 `).trim();
 
-/** After sandbox runs: model sees outputs and writes the final user-facing answer (no code). */
+/** Second LLM call after sandbox. */
 const USER_AGENT_FOLLOWUP_SYSTEM_PROMPT = String(`
-You are the same flight-data assistant. A Python sandbox has already finished running code that you (the model) proposed in your immediately previous assistant message.
+Sandbox finished running your prior Python. The next user message is execution output (stdout/stderr/JSON).
 
-Your job now:
-- Read the execution outputs below (stdout, stderr, structured JSON). Answer the user in the SAME language as their latest question.
-- Explain results clearly: numbers, coefficients, R², tables, what it means for their flight — not internal implementation.
-- Never mention server paths (/home/user), result.json, artifacts.json, or "saved to a file".
-- Your reply must be plain analysis only: do NOT use markdown code fences (\`\`\`) and do NOT output Python. If something failed, say what failed and what to try next in words.
-
-The transcript includes your prior assistant turn (with code) for context; the user does not need to see that code again unless they asked for it.
+Reply in the user’s question language: interpret numbers and outcomes only. No markdown fences, no Python. Never mention /home/user, result.json, artifacts. On error: what failed and what to try next—in words only.
 `).trim();
 
 const repoRoot = path.join(__dirname, "..", "..");

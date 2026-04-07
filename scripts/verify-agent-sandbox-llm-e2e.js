@@ -1,15 +1,3 @@
-/**
- * End-to-end check: real OpenAI-compatible chat + real E2B sandbox
- * (same stack as /tracker/agent/chat).
- *
- * Usage:
- *   node scripts/verify-agent-sandbox-llm-e2e.js
- *   node scripts/verify-agent-sandbox-llm-e2e.js --dry-run
- *
- * Requires:
- *   - config/ai-agent.local.js with apiKey, endpoint, model (like tracker controller)
- *   - E2B_API_KEY in env or .env
- */
 const fs = require("fs");
 const path = require("path");
 
