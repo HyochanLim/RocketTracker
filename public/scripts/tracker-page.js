@@ -3,7 +3,6 @@
   var clearFileButton = document.getElementById("clear-upload-file-button");
   var analyzeWrap = document.getElementById("tracker-analyze-wrap");
   var showVisualizerButton = document.getElementById("showVisualizerButton");
-  var backToUploadButton = document.getElementById("backToUploadButton");
   var inputSection = document.getElementById("trackerInputSection");
   var visualizerSection = document.getElementById("trackerVisualizerSection");
   var csrfTokenInput = document.getElementById("tracker-csrf-token");
@@ -36,6 +35,8 @@
     clearWarning();
     if (inputSection) inputSection.classList.add("tracker-hidden-section");
     if (visualizerSection) visualizerSection.classList.remove("tracker-hidden-section");
+    if (document.documentElement) document.documentElement.classList.add("tracker-map-mode");
+    if (document.body) document.body.classList.add("tracker-map-mode");
   }
 
   async function getSavedFileRecords(fileId) {
@@ -57,13 +58,6 @@
       var v = window.getCesiumViewer && window.getCesiumViewer();
       if (v && typeof v.resize === "function") v.resize();
     }, 150);
-  }
-
-  function showInputSection() {
-    window.__trackerActiveFileId = "";
-    if (typeof window.__trackerSetAgentOpen === "function") window.__trackerSetAgentOpen(false);
-    if (visualizerSection) visualizerSection.classList.add("tracker-hidden-section");
-    if (inputSection) inputSection.classList.remove("tracker-hidden-section");
   }
 
   function clearWarning() {
@@ -277,7 +271,6 @@
     });
   }
   if (showVisualizerButton) showVisualizerButton.addEventListener("click", handleAnalyzeClick);
-  if (backToUploadButton) backToUploadButton.addEventListener("click", showInputSection);
 
   updateAnalyzeButtonVisibility();
 })();
@@ -286,11 +279,7 @@
   var workbench = document.getElementById("tracker-visualizer-workbench");
   var toggle = document.getElementById("tracker-agent-toggle");
   var dock = document.getElementById("tracker-agent-dock");
-  var closeBtn = document.getElementById("tracker-agent-panel-close");
   if (!workbench || !toggle || !dock) return;
-
-  var hintEl = toggle.querySelector(".tracker-agent-toggle-hint");
-  var labelEl = toggle.querySelector(".tracker-agent-toggle-label");
 
   function resizeCesium() {
     var v = window.getCesiumViewer && window.getCesiumViewer();
@@ -313,8 +302,11 @@
   function syncToggleUi(open) {
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     dock.setAttribute("aria-hidden", open ? "false" : "true");
-    if (labelEl) labelEl.textContent = open ? "Hide" : "Agent";
-    if (hintEl) hintEl.textContent = open ? "close assistant" : "flight assistant";
+    toggle.classList.toggle("is-open", !!open);
+    toggle.setAttribute(
+      "aria-label",
+      open ? "Close AI assistant panel" : "Open AI assistant panel",
+    );
   }
 
   function setOpen(open) {
@@ -328,7 +320,10 @@
     if (on) {
       window.setTimeout(function () {
         var input = document.getElementById("tracker-agent-input");
-        if (input) input.focus();
+        if (input) {
+          input.focus();
+          if (typeof window.__trackerFitAgentInput === "function") window.__trackerFitAgentInput();
+        }
       }, 420);
     } else if (dock.contains(document.activeElement)) {
       toggle.focus();
@@ -341,9 +336,6 @@
 
   toggle.addEventListener("click", function () {
     setOpen(!isOpen());
-  });
-  if (closeBtn) closeBtn.addEventListener("click", function () {
-    setOpen(false);
   });
 
   document.addEventListener("keydown", function (ev) {

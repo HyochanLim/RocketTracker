@@ -1,3 +1,27 @@
+/* Tracker route: black / white / gray only (no green accent) */
+body.page-tracker {
+  --accent: #ffffff;
+  --accent-dim: #c8c8c8;
+  --accent-deep: #2a2a2a;
+  --accent-rgb: 255, 255, 255;
+  --accent-glow: rgba(255, 255, 255, 0.08);
+  --accent-glow-subtle: rgba(255, 255, 255, 0.04);
+  --accent-soft: #3a3a3a;
+  --text-accent: rgba(255, 255, 255, 0.92);
+  --line-accent-soft: rgba(255, 255, 255, 0.14);
+  --line-accent: rgba(255, 255, 255, 0.32);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --dropdown-hover: rgba(255, 255, 255, 0.1);
+  --card-tint-a: rgba(255, 255, 255, 0.05);
+  --btn-primary-shadow: rgba(0, 0, 0, 0.5);
+  --founder: rgba(255, 255, 255, 0.45);
+  --danger: #bdbdbd;
+  --danger-rgb: 189, 189, 189;
+  --danger-border: rgba(255, 255, 255, 0.32);
+  --danger-surface: rgba(255, 255, 255, 0.06);
+  --danger-text: rgba(255, 255, 255, 0.88);
+}
+
 .tracker-page {
   width: 100%;
 }
@@ -11,6 +35,8 @@
   width: min(1520px, 98vw);
   max-height: none;
   overflow: visible;
+  border: none;
+  box-shadow: none;
 }
 
 .tracker-page .tracker-upload-form {
@@ -34,10 +60,10 @@
 }
 
 .tracker-page .tracker-upload-input::file-selector-button {
-  border: 1px solid var(--line);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 8px;
-  background: var(--accent);
-  color: var(--black);
+  background: #f2f2f2;
+  color: #0a0a0a;
   font: inherit;
   font-size: 0.85rem;
   padding: 0.45rem 0.8rem;
@@ -178,7 +204,7 @@
 
 /* Map + agent: fixed-size globe (height × φ width); horizontal position eases when dock opens */
 .tracker-visualizer-workbench {
-  --tracker-globe-h: min(74vh, 820px);
+  --tracker-globe-h: min(77vh, 850px);
   --tracker-globe-w: calc(var(--tracker-globe-h) * 1.6180339887);
   --tracker-agent-col: min(380px, 34vw);
   --tracker-agent-gap: 1rem;
@@ -201,7 +227,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
 }
 
 .tracker-visualizer-map-slot {
@@ -209,27 +235,6 @@
   flex-shrink: 0;
   width: var(--tracker-globe-w);
   max-width: 100%;
-}
-
-/* Globe slide: translate3d composites on GPU (smoother than animating `left`) */
-@supports (container-type: inline-size) {
-  .tracker-visualizer-main {
-    container-type: inline-size;
-  }
-
-  /* Always center globe in main column — when agent opens, 100cqi shrinks so offset updates */
-  .tracker-visualizer-map-slot {
-    backface-visibility: hidden;
-    transition: transform 0.52s var(--tracker-ease-out);
-    transform: translate3d(max(0px, calc((100cqi - var(--tracker-globe-w)) / 2)), 0, 0);
-  }
-}
-
-@supports not (container-type: inline-size) {
-  .tracker-visualizer-map-slot {
-    transition: left 0.52s var(--tracker-ease-out);
-    left: max(0px, calc((100% - var(--tracker-globe-w)) / 2));
-  }
 }
 
 .tracker-agent-dock {
@@ -240,6 +245,7 @@
   min-width: 0;
   height: var(--tracker-globe-h);
   max-height: var(--tracker-globe-h);
+  align-self: flex-start;
   display: flex;
   flex-direction: column;
   opacity: 0;
@@ -274,68 +280,6 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-}
-
-.tracker-agent-header {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.55rem 0.85rem;
-  border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.tracker-agent-header-labels {
-  display: flex;
-  flex-direction: column;
-  gap: 0.06rem;
-  min-width: 0;
-}
-
-.tracker-agent-panel-close {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  margin: 0;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--muted);
-  font-size: 1.35rem;
-  font-weight: 300;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    color 0.18s ease,
-    border-color 0.18s ease,
-    background-color 0.18s ease;
-}
-
-.tracker-agent-panel-close:hover {
-  color: var(--text);
-  border-color: var(--line-accent);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.tracker-agent-header-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--text);
-}
-
-.tracker-agent-header-hint {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 
 .tracker-agent-thread {
@@ -391,17 +335,71 @@
 }
 
 .tracker-agent-msg--user .tracker-agent-msg-bubble {
-  background: rgba(var(--accent-rgb), 0.22);
-  border-color: rgba(var(--accent-rgb), 0.45);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
-.tracker-agent-msg--assistant .tracker-agent-msg-bubble {
-  background: rgba(255, 255, 255, 0.06);
+.tracker-agent-msg--assistant .tracker-agent-msg-content {
+  max-width: 100%;
+  padding: 0.1rem 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--text);
+  word-wrap: break-word;
 }
 
-.tracker-agent-msg-bubble--typing {
-  color: var(--muted);
-  font-style: italic;
+.tracker-agent-msg-typing {
+  display: flex;
+  align-items: center;
+  max-width: 6rem;
+  padding: 0.1rem 0 0.15rem;
+}
+
+.tracker-agent-typing-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 0.65rem;
+}
+
+.tracker-agent-typing-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.48),
+    rgba(255, 255, 255, 0.3)
+  );
+  animation: tracker-typing-dot 1.35s ease-in-out infinite;
+  opacity: 0.72;
+}
+
+.tracker-agent-typing-dots span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.tracker-agent-typing-dots span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes tracker-typing-dot {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 0.78;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tracker-agent-typing-dots span {
+    animation: none;
+    opacity: 0.65;
+  }
 }
 
 .tracker-agent-composer {
@@ -411,39 +409,88 @@
   background: rgba(0, 0, 0, 0.35);
 }
 
+.tracker-agent-composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.55rem;
+}
+
 .tracker-agent-input {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
   width: 100%;
   resize: none;
-  min-height: 72px;
-  margin-bottom: 0.55rem;
+  min-height: calc(0.88rem * 1.4 + 0.55rem * 2);
+  max-height: min(50vh, 420px);
+  overflow-y: hidden;
+  margin: 0;
   font-size: 0.88rem;
   line-height: 1.4;
   border-radius: 10px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.05);
   color: var(--text);
   padding: 0.55rem 0.65rem;
   font-family: inherit;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .tracker-agent-input:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .tracker-agent-input::placeholder {
   color: rgba(255, 255, 255, 0.35);
 }
 
-.tracker-agent-composer-actions {
-  display: flex;
-  justify-content: flex-end;
+.tracker-agent-send {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  padding: 0;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.18s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
 }
 
-.tracker-agent-send {
-  font-size: 0.85rem;
-  padding: 0.45rem 0.95rem;
+.tracker-agent-send:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
+
+.tracker-agent-send:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.tracker-agent-send:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.tracker-agent-send-icon {
+  display: block;
+  margin: 0;
+  overflow: visible;
 }
 
 .tracker-agent-sr-only {
@@ -458,106 +505,75 @@
   border: 0;
 }
 
-.tracker-visualizer-back-row {
-  margin-top: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.tracker-agent-toggle {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0;
-  padding: 0.5rem 1rem 0.52rem 1.05rem;
-  border: 1px solid rgba(var(--accent-rgb), 0.45);
-  border-radius: 999px;
-  background: linear-gradient(155deg, rgba(var(--accent-rgb), 0.14), rgba(0, 0, 0, 0.5));
-  color: var(--text);
-  font: inherit;
+/* Slim right-edge control — opens AI dock (Cursor-style affordance) */
+.tracker-agent-edge-toggle {
+  position: fixed;
+  z-index: 1010;
+  top: 72px;
+  right: 0;
+  width: 20px;
+  height: calc(100vh - 72px);
+  margin: 0;
+  padding: 0 0 0 2px;
+  border: none;
+  border-radius: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03));
+  color: rgba(255, 255, 255, 0.34);
   cursor: pointer;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.35),
-    0 4px 18px rgba(0, 0, 0, 0.35);
-  transition:
-    transform 0.24s var(--tracker-ease-out),
-    border-color 0.24s var(--tracker-ease-out),
-    box-shadow 0.24s var(--tracker-ease-out),
-    filter 0.24s var(--tracker-ease-out);
-}
-
-.tracker-agent-toggle:hover {
-  border-color: rgba(var(--accent-rgb), 0.75);
-  filter: brightness(1.06);
-  box-shadow:
-    0 0 0 1px rgba(var(--accent-rgb), 0.2),
-    0 6px 22px rgba(0, 0, 0, 0.45);
-}
-
-.tracker-agent-toggle:active {
-  transform: scale(0.98);
-}
-
-.tracker-visualizer-workbench.is-agent-open .tracker-agent-toggle {
-  border-color: var(--line-accent);
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28);
-}
-
-.tracker-agent-toggle-glow {
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  background: radial-gradient(
-    ellipse 80% 120% at 30% 0%,
-    rgba(var(--accent-rgb), 0.35),
-    transparent 62%
-  );
-  opacity: 0.85;
-  pointer-events: none;
-  z-index: 0;
-  transition: opacity 0.3s ease;
-}
-
-.tracker-visualizer-workbench.is-agent-open .tracker-agent-toggle-glow {
-  opacity: 0.25;
-}
-
-.tracker-agent-toggle-inner {
-  position: relative;
-  z-index: 1;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 0.05rem;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 0.22s ease,
+    background 0.22s ease,
+    width 0.22s ease,
+    box-shadow 0.22s ease,
+    opacity 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.tracker-agent-toggle-label {
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text);
+.tracker-agent-edge-toggle:hover {
+  color: rgba(255, 255, 255, 0.78);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07));
+  width: 24px;
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.12);
 }
 
-.tracker-agent-toggle-hint {
-  font-size: 0.66rem;
-  font-weight: 600;
-  color: var(--muted);
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
+.tracker-agent-edge-toggle:active {
+  color: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1));
+}
+
+.tracker-agent-edge-toggle__icon {
+  display: block;
+  flex-shrink: 0;
+  transition: transform 0.28s var(--tracker-ease-out, cubic-bezier(0, 0, 0.2, 1));
+  transform: translateX(0);
+}
+
+/* Panel open: chevron flips to suggest “collapse toward right” */
+.tracker-agent-edge-toggle.is-open .tracker-agent-edge-toggle__icon {
+  transform: scaleX(-1);
+}
+
+@media (max-width: 960px) {
+  .tracker-agent-edge-toggle {
+    width: 26px;
+    height: calc(100vh - 72px);
+    padding-left: 4px;
+  }
+
+  .tracker-agent-edge-toggle:hover {
+    width: 30px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .tracker-visualizer-workbench,
   .tracker-visualizer-map-slot,
   .tracker-agent-dock,
-  .tracker-agent-toggle,
-  .tracker-agent-toggle-glow {
+  .tracker-agent-edge-toggle,
+  .tracker-agent-edge-toggle__icon {
     transition-duration: 0.01ms !important;
   }
 }
@@ -621,7 +637,7 @@
 /* Cesium — fills map-slot: width = height × φ (vars on .tracker-visualizer-workbench) */
 #cesiumContainer.tracker-visualizer-root {
   position: relative;
-  border: 1px solid var(--line-accent-soft);
+  border: none;
   border-radius: 12px;
   overflow: hidden;
   background: var(--surface-elevated);
@@ -636,6 +652,7 @@
 #cesiumContainer.tracker-visualizer-root .cesium-viewer-cesiumWidgetContainer,
 #cesiumContainer.tracker-visualizer-root .cesium-widget,
 #cesiumContainer.tracker-visualizer-root canvas {
+  border: none !important;
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
@@ -645,5 +662,142 @@
 
 #cesiumContainer.tracker-visualizer-root .cesium-viewer-bottom {
   display: none !important;
+}
+
+/* —— Analyze / map view: no page scroll; agent = full-height sidebar (Cursor-style) —— */
+html.tracker-map-mode {
+  height: 100%;
+  overflow: hidden;
+}
+
+body.tracker-map-mode {
+  overflow: hidden;
+  height: 100vh;
+}
+
+body.tracker-map-mode main.container.tracker-panel.page-panel {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  height: calc(100vh - 72px);
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body.tracker-map-mode .tracker-page {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body.tracker-map-mode #trackerVisualizerSection {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body.tracker-map-mode .tracker-visualizer-workbench {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  align-items: stretch;
+  /* Fixed portrait tile: width = height × φ (do not stretch map to full viewport width) */
+  --tracker-globe-h: min(77vh, 850px);
+  --tracker-globe-w: calc(var(--tracker-globe-h) * 1.6180339887);
+}
+
+body.tracker-map-mode .tracker-visualizer-main {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+body.tracker-map-mode .tracker-visualizer-map-slot {
+  position: relative;
+  flex-shrink: 0;
+  flex-grow: 0;
+  width: var(--tracker-globe-w);
+  max-width: 100%;
+  min-height: 0;
+}
+
+body.tracker-map-mode .tracker-agent-dock {
+  align-self: stretch;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  border-radius: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  background: rgba(10, 10, 10, 0.97);
+  box-shadow: none;
+}
+
+body.tracker-map-mode .tracker-visualizer-workbench.is-agent-open .tracker-agent-dock {
+  max-height: none;
+  box-shadow: none;
+  border-left-color: rgba(255, 255, 255, 0.12);
+}
+
+body.tracker-map-mode #cesiumContainer.tracker-visualizer-root {
+  width: 100%;
+  height: var(--tracker-globe-h);
+  min-height: var(--tracker-globe-h);
+  max-height: var(--tracker-globe-h);
+  border-radius: 0;
+}
+
+@media (max-width: 960px) {
+  body.tracker-map-mode .tracker-visualizer-workbench {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    --tracker-globe-h: min(55vh, 550px);
+    --tracker-globe-w: calc(var(--tracker-globe-h) * 1.6180339887);
+  }
+
+  body.tracker-map-mode .tracker-visualizer-main {
+    flex: 1 1 45%;
+    min-height: 0;
+    align-items: center;
+  }
+
+  body.tracker-map-mode .tracker-visualizer-map-slot {
+    max-width: 100%;
+    width: min(var(--tracker-globe-w), 100%);
+    transform: none !important;
+    left: auto !important;
+  }
+
+  body.tracker-map-mode #cesiumContainer.tracker-visualizer-root {
+    height: var(--tracker-globe-h);
+    min-height: var(--tracker-globe-h);
+    max-height: var(--tracker-globe-h);
+  }
+
+  body.tracker-map-mode .tracker-visualizer-workbench.is-agent-open .tracker-agent-dock {
+    flex: 1 1 50%;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 0;
+    max-height: none;
+    opacity: 1;
+    transform: none;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
 }
 

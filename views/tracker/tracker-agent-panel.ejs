@@ -1,18 +1,4 @@
 <div class="tracker-agent-panel">
-  <header class="tracker-agent-header">
-    <div class="tracker-agent-header-labels">
-      <span class="tracker-agent-header-title">Agent</span>
-      <span class="tracker-agent-header-hint">Tracker</span>
-    </div>
-    <button
-      type="button"
-      class="tracker-agent-panel-close"
-      id="tracker-agent-panel-close"
-      aria-label="Close assistant panel"
-    >
-      <span aria-hidden="true">×</span>
-    </button>
-  </header>
   <div class="tracker-agent-thread" id="tracker-agent-thread" role="log" aria-live="polite">
     <div class="tracker-agent-welcome" id="tracker-agent-welcome">
       <p class="tracker-agent-welcome-title">Flight assistant</p>
@@ -24,16 +10,38 @@
   </div>
   <div class="tracker-agent-composer">
     <label class="tracker-agent-sr-only" for="tracker-agent-input">Message</label>
-    <textarea
-      id="tracker-agent-input"
-      class="tracker-agent-input"
-      rows="3"
-      placeholder="Type a message…"
-      autocomplete="off"
-    ></textarea>
-    <div class="tracker-agent-composer-actions">
-      <button type="button" class="button button-primary tracker-agent-send" id="tracker-agent-send" disabled>
-        Send
+    <div class="tracker-agent-composer-row">
+      <textarea
+        id="tracker-agent-input"
+        class="tracker-agent-input"
+        rows="1"
+        placeholder="Type a message…"
+        autocomplete="off"
+      ></textarea>
+      <button
+        type="button"
+        class="tracker-agent-send"
+        id="tracker-agent-send"
+        disabled
+        aria-label="Send message"
+      >
+        <svg
+          class="tracker-agent-send-icon"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"
+          />
+        </svg>
       </button>
     </div>
   </div>

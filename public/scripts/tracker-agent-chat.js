@@ -40,10 +40,14 @@
     var wrap = document.createElement("div");
     wrap.className =
       "tracker-agent-msg " + (role === "user" ? "tracker-agent-msg--user" : "tracker-agent-msg--assistant");
-    var bubble = document.createElement("div");
-    bubble.className = "tracker-agent-msg-bubble";
-    bubble.innerHTML = escapeHtml(text).replace(/\n/g, "<br>");
-    wrap.appendChild(bubble);
+    var inner = document.createElement("div");
+    inner.innerHTML = escapeHtml(text).replace(/\n/g, "<br>");
+    if (role === "user") {
+      inner.className = "tracker-agent-msg-bubble";
+    } else {
+      inner.className = "tracker-agent-msg-content";
+    }
+    wrap.appendChild(inner);
     messagesEl.appendChild(wrap);
     scrollThread();
   }
@@ -55,10 +59,13 @@
     var wrap = document.createElement("div");
     wrap.className = "tracker-agent-msg tracker-agent-msg--assistant";
     wrap.id = id;
-    var bubble = document.createElement("div");
-    bubble.className = "tracker-agent-msg-bubble tracker-agent-msg-bubble--typing";
-    bubble.textContent = "…";
-    wrap.appendChild(bubble);
+    var typing = document.createElement("div");
+    typing.className = "tracker-agent-msg-typing";
+    typing.setAttribute("aria-label", "Assistant is replying");
+    typing.innerHTML =
+      '<span class="tracker-agent-typing-dots" aria-hidden="true">' +
+      "<span></span><span></span><span></span></span>";
+    wrap.appendChild(typing);
     messagesEl.appendChild(wrap);
     scrollThread();
     return id;
@@ -73,6 +80,19 @@
     sendBtn.disabled = busy || !String(input.value || "").trim();
   }
 
+  /** Grow/shrink with line breaks; scroll only beyond CSS max-height. */
+  function fitInputHeight() {
+    var cs = window.getComputedStyle(input);
+    var minH = parseFloat(cs.minHeight, 10) || 0;
+    var maxH = parseFloat(cs.maxHeight, 10) || Infinity;
+    input.style.overflowY = "hidden";
+    input.style.height = "auto";
+    var sh = input.scrollHeight;
+    var h = Math.min(Math.max(sh, minH), maxH);
+    input.style.height = h + "px";
+    input.style.overflowY = sh > maxH ? "auto" : "hidden";
+  }
+
   async function onSend() {
     var text = String(input.value || "").trim();
     if (!text || busy) return;
@@ -85,6 +105,7 @@
     busy = true;
     syncSend();
     input.value = "";
+    fitInputHeight();
     appendBubble("user", text);
     transcript.push({ role: "user", content: text });
 
@@ -130,12 +151,18 @@
   }
 
   sendBtn.addEventListener("click", onSend);
-  input.addEventListener("input", syncSend);
+  input.addEventListener("input", function () {
+    fitInputHeight();
+    syncSend();
+  });
   input.addEventListener("keydown", function (ev) {
     if (ev.key === "Enter" && !ev.shiftKey) {
       ev.preventDefault();
       onSend();
     }
   });
+  fitInputHeight();
   syncSend();
+
+  window.__trackerFitAgentInput = fitInputHeight;
 })();

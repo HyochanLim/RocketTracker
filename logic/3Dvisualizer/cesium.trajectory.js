@@ -94,7 +94,7 @@
         position: Cesium.Cartesian3.fromDegrees(launch.lon, launch.lat, groundAlt),
         point: {
           pixelSize: 14,
-          color: Cesium.Color.fromCssColorString("#39ff14"),
+          color: Cesium.Color.fromCssColorString("#f0f0f0"),
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 2,
         },

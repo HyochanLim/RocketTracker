@@ -4,7 +4,7 @@
     "/public/styles/tracker.css",
     "https://cesium.com/downloads/cesiumjs/releases/1.139.1/Build/Cesium/Widgets/widgets.css",
   ] }) %>
-  <body>
+  <body class="page-tracker">
     <%- include("../shared/header") %>
     <main class="container page-panel tracker-panel">
       <div class="tracker-page">
@@ -68,26 +68,29 @@
         </div>
 
         <section id="trackerVisualizerSection" class="tracker-visualizer-section tracker-hidden-section">
+          <button
+            type="button"
+            class="tracker-agent-edge-toggle"
+            id="tracker-agent-toggle"
+            aria-expanded="false"
+            aria-controls="tracker-agent-dock"
+            aria-label="Open AI assistant panel"
+          >
+            <svg
+              class="tracker-agent-edge-toggle__icon"
+              width="12"
+              height="24"
+              viewBox="0 0 12 24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path fill="currentColor" d="M7.5 4L2 12l5.5 8H9L3.5 12 9 4H7.5z" />
+            </svg>
+          </button>
           <div class="tracker-visualizer-workbench" id="tracker-visualizer-workbench">
             <div class="tracker-visualizer-main">
               <div class="tracker-visualizer-map-slot">
                 <div id="cesiumContainer" class="tracker-visualizer-root"></div>
-              </div>
-              <div class="tracker-visualizer-back-row">
-                <button id="backToUploadButton" class="button button-ghost" type="button">Back</button>
-                <button
-                  type="button"
-                  class="tracker-agent-toggle"
-                  id="tracker-agent-toggle"
-                  aria-expanded="false"
-                  aria-controls="tracker-agent-dock"
-                >
-                  <span class="tracker-agent-toggle-glow" aria-hidden="true"></span>
-                  <span class="tracker-agent-toggle-inner">
-                    <span class="tracker-agent-toggle-label">Agent</span>
-                    <span class="tracker-agent-toggle-hint">flight assistant</span>
-                  </span>
-                </button>
               </div>
             </div>
             <aside

@@ -74,7 +74,7 @@
         polyline: {
           positions: Cesium.Cartesian3.fromDegreesArrayHeights(trailFlat),
           width: 2,
-          material: Cesium.Color.fromCssColorString("#39ff14").withAlpha(0.9),
+          material: Cesium.Color.fromCssColorString("#f0f0f0").withAlpha(0.95),
           clampToGround: false,
         },
       });

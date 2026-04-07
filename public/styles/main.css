@@ -5,10 +5,10 @@
   --white: #ffffff;
   --black: #000000;
 
-  /* Surfaces */
-  --bg: var(--black);
-  --bg-soft: #0a0a0a;
-  --header-surface: #010101;
+  /* Surfaces (navbar slightly darker than body for separation) */
+  --bg: #0a0a0a;
+  --bg-soft: #121212;
+  --header-surface: #000000;
   --overlay-dark: rgba(0, 0, 0, 0.72);
 
   /* Typography */
@@ -409,10 +409,6 @@ a {
 
 .nav-links a:active {
   transform: translateY(1px);
-}
-
-.nav-inline-form {
-  margin: 0;
 }
 
 /* Marketing / SaaS-style static pages */
@@ -862,7 +858,7 @@ body.page-home {
 }
 
 body.page-home .site-header {
-  background: rgba(0, 0, 0, 0.94);
+  background-color: var(--header-surface);
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 

@@ -25,12 +25,6 @@
           <li><a href="/signup" class="button button-primary nav-cta">Sign up</a></li>
         <% } else { %>
           <li>
-            <form action="/logout" method="POST" class="nav-inline-form">
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-              <button type="submit" class="button button-ghost">Log out</button>
-            </form>
-          </li>
-          <li>
             <a href="/profile/<%= safeUser.id || '' %>" class="profile-trigger" aria-label="Go to profile">
               <span class="profile-avatar-wrap" aria-hidden="true">
                 <img
