@@ -1,11 +1,59 @@
 const fs = require("fs");
 const path = require("path");
 
-const USER_AGENT_SYSTEM_PROMPT = "";
+const USER_AGENT_SYSTEM_PROMPT = String(`
+You are a flight-data analysis assistant in a web app chat panel.
+
+## What the user sees
+- They want answers and interpretation (numbers, coefficients, R², what it means), NOT raw code.
+- Never tell the user about server paths, JSON files, or “saved to …”. Those are internal only.
+- Do not paste executable Python outside a fenced block. If you use Python, put ALL of it in exactly one
+  \`\`\`python … \`\`\` fence (or multiple fences only if you truly need separate runs). No code in plain prose.
+
+## Reply shape when Python is needed
+1) First: 2–6 short paragraphs or bullet points in the user’s language with the actual findings
+   (e.g. model form, coefficients, R², residuals, predictions). No \`\`\` yet.
+2) Then: the \`\`\`python block that does the work.
+
+## Sandbox data (for Python only; do not mention these paths to the user)
+- Whole-flight JSON may exist as /home/user/flight_data.json
+- Legacy alias: /home/user/ai_parsed_data.json
+If the user pasted small tables in chat, use that in code; still load from file when it’s flight data.
+
+## Internal machine output (for the app UI only — never describe these filenames to the user)
+Python MUST also write a JSON object to /home/user/result.json with at least:
+- "summary": string, same interpretation as step (1), plain text, suitable to show in the panel.
+- Optional: "tables", "series", "metrics", etc.
+
+Plots: save under /home/user/artifacts/ and write /home/user/artifacts.json as:
+{ "artifacts": [ { "path": "/home/user/artifacts/plot.png", "mime": "image/png", "name": "plot.png" } ] }
+
+Stdout from Python should repeat the key conclusions in one short block (no file paths).
+
+If no Python is needed, reply normally with no fenced code.
+`).trim();
+
+/** After sandbox runs: model sees outputs and writes the final user-facing answer (no code). */
+const USER_AGENT_FOLLOWUP_SYSTEM_PROMPT = String(`
+You are the same flight-data assistant. A Python sandbox has already finished running code that you (the model) proposed in your immediately previous assistant message.
+
+Your job now:
+- Read the execution outputs below (stdout, stderr, structured JSON). Answer the user in the SAME language as their latest question.
+- Explain results clearly: numbers, coefficients, R², tables, what it means for their flight — not internal implementation.
+- Never mention server paths (/home/user), result.json, artifacts.json, or "saved to a file".
+- Your reply must be plain analysis only: do NOT use markdown code fences (\`\`\`) and do NOT output Python. If something failed, say what failed and what to try next in words.
+
+The transcript includes your prior assistant turn (with code) for context; the user does not need to see that code again unless they asked for it.
+`).trim();
 
 const repoRoot = path.join(__dirname, "..", "..");
 const sandboxesByUserId = new Map();
+const datasetKeyByUserId = new Map();
 const TIMEOUT_MS = 60 * 60 * 1000;
+/** Single runCode execution timeout (ms); E2B default is 60s. */
+const RUN_CODE_TIMEOUT_MS = 120_000;
+/** Max chars of result.json embedded in the follow-up LLM message */
+const RESULT_JSON_LLM_MAX_CHARS = 14_000;
 
 function e2bApiKey() {
   const env = process.env.E2B_API_KEY && String(process.env.E2B_API_KEY).trim();
@@ -49,6 +97,32 @@ function stripPythonBlocks(text) {
     .trim();
 }
 
+function truncateForLLM(s, maxLen) {
+  const t = String(s || "");
+  if (t.length <= maxLen) return t;
+  return `${t.slice(0, maxLen)}\n… (truncated, ${t.length} chars total)`;
+}
+
+function buildSandboxToolMessage(execChunks) {
+  const parts = [
+    "The following is the outcome of executing your Python in the sandbox. Use it to compose the final answer for the user.",
+    "",
+  ];
+  for (let i = 0; i < execChunks.length; i += 1) {
+    const c = execChunks[i];
+    parts.push(`--- Run ${i + 1} ---`);
+    parts.push(`stdout:\n${c.stdout || "(empty)"}`);
+    parts.push(`stderr:\n${c.stderr || "(empty)"}`);
+    if (c.resultJson != null) {
+      parts.push(`result (JSON):\n${c.resultJson}`);
+    } else {
+      parts.push("result (JSON): (none or unreadable)");
+    }
+    parts.push("");
+  }
+  return parts.join("\n");
+}
+
 async function openAiComplete(cfg, messages) {
   const res = await fetch(String(cfg.endpoint).trim(), {
     method: "POST",
@@ -59,7 +133,7 @@ async function openAiComplete(cfg, messages) {
     body: JSON.stringify({
       model: String(cfg.model).trim(),
       messages,
-      max_completion_tokens: 1200,
+      max_completion_tokens: 2800,
     }),
   });
   const raw = await res.text();
@@ -87,31 +161,130 @@ async function getOrCreateSandbox(userId) {
   return box;
 }
 
-async function runPythonInSandbox(userId, code, aiParsedDataJson) {
+async function ensureDatasetInSandbox(userId, datasetKey, aiParsedDataJson) {
   const box = await getOrCreateSandbox(userId);
-  await box.files.write("/home/user/ai_parsed_data.json", aiParsedDataJson || "{}");
-  const exec = await box.runCode(code);
+  const uid = String(userId || "").trim();
+  const key = String(datasetKey || "").trim() || "default";
+  const prev = datasetKeyByUserId.get(uid) || "";
+  if (prev === key) return box;
+
+  const payload = aiParsedDataJson || "{}";
+  await box.files.write("/home/user/flight_data.json", payload);
+  await box.files.write("/home/user/ai_parsed_data.json", payload);
+  datasetKeyByUserId.set(uid, key);
+  return box;
+}
+
+async function readJsonIfExists(box, p) {
+  try {
+    const raw = await box.files.read(p);
+    const text = typeof raw === "string" ? raw : Buffer.from(raw).toString("utf-8");
+    const t = String(text || "").trim();
+    if (!t) return null;
+    return JSON.parse(t);
+  } catch {
+    return null;
+  }
+}
+
+async function readBase64IfExists(box, p) {
+  try {
+    const raw = await box.files.read(p);
+    const buf = typeof raw === "string" ? Buffer.from(raw, "utf-8") : Buffer.from(raw);
+    if (!buf || buf.length === 0) return null;
+    return buf.toString("base64");
+  } catch {
+    return null;
+  }
+}
+
+async function runPythonInSandbox(userId, datasetKey, code, aiParsedDataJson) {
+  const box = await ensureDatasetInSandbox(userId, datasetKey, aiParsedDataJson);
+  const exec = await box.runCode(code, { timeoutMs: RUN_CODE_TIMEOUT_MS });
   if (exec.error) throw new Error(exec.error.message || String(exec.error));
   const stdout = (exec.logs && exec.logs.stdout && exec.logs.stdout.join("\n")) || "";
   const stderr = (exec.logs && exec.logs.stderr && exec.logs.stderr.join("\n")) || "";
-  return { stdout: stdout.trim(), stderr: stderr.trim() };
+
+  const result = await readJsonIfExists(box, "/home/user/result.json");
+  const artifactsIndex = await readJsonIfExists(box, "/home/user/artifacts.json");
+  const artifactsList = artifactsIndex && Array.isArray(artifactsIndex.artifacts) ? artifactsIndex.artifacts : [];
+  const artifacts = [];
+  for (let i = 0; i < artifactsList.length; i += 1) {
+    const a = artifactsList[i];
+    if (!a || typeof a !== "object") continue;
+    const ap = String(a.path || "").trim();
+    if (!ap) continue;
+    const mime = String(a.mime || "").trim() || "application/octet-stream";
+    const name = String(a.name || path.basename(ap)).trim() || path.basename(ap);
+    const base64 = await readBase64IfExists(box, ap);
+    if (!base64) continue;
+    artifacts.push({ name, mime, base64 });
+  }
+
+  return { stdout: stdout.trim(), stderr: stderr.trim(), result, artifacts };
 }
 
-async function runSandboxChatSession(userId, openaiCfg, openAiMessages, aiParsedDataJson) {
+async function runSandboxChatSession(userId, openaiCfg, openAiMessages, aiParsedDataJson, datasetKey) {
   const messages = messagesWithSystem(openAiMessages);
   if (messages.length === 0) throw new Error("No messages.");
 
-  const reply = await openAiComplete(openaiCfg, messages);
-  const blocks = extractPythonBlocks(reply);
-  if (blocks.length === 0) return reply;
-
-  let out = stripPythonBlocks(reply);
-  for (let i = 0; i < blocks.length; i += 1) {
-    const { stdout, stderr } = await runPythonInSandbox(userId, blocks[i], aiParsedDataJson);
-    const tail = [stdout && `Output:\n${stdout}`, stderr && `Stderr:\n${stderr}`].filter(Boolean).join("\n\n") || "(no output)";
-    out = (out ? `${out}\n\n` : "") + tail;
+  const reply1 = await openAiComplete(openaiCfg, messages);
+  const blocks = extractPythonBlocks(reply1);
+  if (blocks.length === 0) {
+    return { text: reply1, result: null, artifacts: [], executedCode: null };
   }
-  return out.trim();
+
+  const execChunks = [];
+  let lastResult = null;
+  let lastArtifacts = [];
+  for (let i = 0; i < blocks.length; i += 1) {
+    const { stdout, stderr, result, artifacts } = await runPythonInSandbox(userId, datasetKey, blocks[i], aiParsedDataJson);
+    let resultJson = "";
+    try {
+      resultJson = result == null ? "" : truncateForLLM(JSON.stringify(result, null, 2), RESULT_JSON_LLM_MAX_CHARS);
+    } catch {
+      resultJson = truncateForLLM(String(result), RESULT_JSON_LLM_MAX_CHARS);
+    }
+    execChunks.push({ stdout: stdout || "", stderr: stderr || "", resultJson });
+    if (result != null) lastResult = result;
+    if (Array.isArray(artifacts) && artifacts.length) lastArtifacts = artifacts;
+  }
+
+  const toolUserContent = buildSandboxToolMessage(execChunks);
+  const hist = Array.isArray(openAiMessages) ? openAiMessages.filter((m) => m && (m.role === "user" || m.role === "assistant")) : [];
+  const followupMessages = [
+    { role: "system", content: USER_AGENT_FOLLOWUP_SYSTEM_PROMPT },
+  ]
+    .concat(hist)
+    .concat([
+      { role: "assistant", content: reply1 },
+      { role: "user", content: toolUserContent },
+    ]);
+
+  const reply2 = await openAiComplete(openaiCfg, followupMessages);
+  let text = stripPythonBlocks(reply2).trim();
+
+  const sum =
+    lastResult &&
+    typeof lastResult === "object" &&
+    lastResult.summary != null &&
+    String(lastResult.summary).trim()
+      ? String(lastResult.summary).trim()
+      : "";
+  if (sum && (!text || text.length < 12 || !text.includes(sum.slice(0, Math.min(32, sum.length))))) {
+    text = (text ? `${text}\n\n` : "") + sum;
+  }
+
+  const executedCode = blocks
+    .map((b, i) => `# --- run ${i + 1} ---\n${String(b || "").trim()}`)
+    .join("\n\n");
+
+  return {
+    text: text.trim(),
+    result: lastResult,
+    artifacts: lastArtifacts,
+    executedCode: executedCode || null,
+  };
 }
 
-module.exports = { runSandboxChatSession, USER_AGENT_SYSTEM_PROMPT };
+module.exports = { runSandboxChatSession, USER_AGENT_SYSTEM_PROMPT, USER_AGENT_FOLLOWUP_SYSTEM_PROMPT };

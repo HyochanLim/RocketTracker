@@ -321,6 +321,9 @@ body.page-tracker {
 
 .tracker-agent-msg--assistant {
   justify-content: flex-start;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
 }
 
 .tracker-agent-msg-bubble {
@@ -346,6 +349,132 @@ body.page-tracker {
   line-height: 1.55;
   color: var(--text);
   word-wrap: break-word;
+}
+
+.tracker-agent-artifact-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin-top: 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tracker-agent-artifact-raw {
+  margin: 0.6rem 0 0;
+  padding: 0.6rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  overflow: auto;
+  max-height: 280px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tracker-agent-msg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.1rem 0 0;
+}
+
+.tracker-agent-msg-action {
+  flex: 0 0 auto;
+  padding: 0.32rem 0.6rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.tracker-agent-msg-action:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.38);
+}
+
+.tracker-agent-dialog {
+  margin: auto;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(12, 12, 12, 0.98);
+  color: var(--text);
+  max-width: min(560px, 94vw);
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+}
+
+.tracker-agent-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(3px);
+}
+
+.tracker-agent-dialog-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(75vh, 640px);
+}
+
+.tracker-agent-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.tracker-agent-dialog-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tracker-agent-dialog-close {
+  flex-shrink: 0;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tracker-agent-dialog-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.tracker-agent-dialog-pre {
+  margin: 0;
+  padding: 0.65rem 0.7rem;
+  overflow: auto;
+  flex: 1;
+  min-height: 120px;
+  font-size: 0.74rem;
+  line-height: 1.42;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 0 0 11px 11px;
 }
 
 .tracker-agent-msg-typing {

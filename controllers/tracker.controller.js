@@ -376,8 +376,15 @@ async function postAgentChat(req, res, next) {
     const openAiMessages = trimmed;
 
     const { runSandboxChatSession } = require("../logic/aiAgent/e2b-chat.cjs");
-    const text = await runSandboxChatSession(String(req.session.uid), cfg, openAiMessages, aiParsedJson);
-    return res.json({ ok: true, text: text || "" });
+    const datasetKey = bodyFileId || "default";
+    const out = await runSandboxChatSession(String(req.session.uid), cfg, openAiMessages, aiParsedJson, datasetKey);
+    return res.json({
+      ok: true,
+      text: (out && out.text) || "",
+      result: (out && out.result) || null,
+      artifacts: (out && Array.isArray(out.artifacts) && out.artifacts) || [],
+      executedCode: (out && out.executedCode) || null,
+    });
   } catch (err) {
     next(err);
   }
