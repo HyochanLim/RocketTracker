@@ -17,7 +17,11 @@ function getProducts(req, res) {
 }
 
 function getPricing(req, res) {
-  res.render("pricing/index");
+  res.render("pricing/index", {
+    paypalClientId: String(process.env.PAYPAL_CLIENT_ID || "").trim(),
+    paypalCurrency: String(process.env.PAYPAL_PRO_CURRENCY || "USD").trim().toUpperCase(),
+    paypalPrice: String(process.env.PAYPAL_PRO_PRICE || "10.00").trim(),
+  });
 }
 
 function getResources(req, res) {

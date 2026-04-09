@@ -42,13 +42,19 @@
 
             <li>Mission-style agent on an efficient model</li>
 
+            <li>No chart/image artifacts in the agent panel</li>
+
             <li>Rate limits aimed at individual exploration</li>
 
             <li>Upgrade anytime if you outgrow “quick answers”</li>
 
           </ul>
 
-          <a href="/signup" class="button button-secondary">Get started</a>
+          <% if (typeof isAuth !== "undefined" && isAuth) { %>
+            <a href="/tracker" class="button button-secondary">Go to tracker</a>
+          <% } else { %>
+            <a href="/signup" class="button button-secondary">Get started</a>
+          <% } %>
 
         </article>
 
@@ -58,21 +64,39 @@
 
           <h2>Pro</h2>
 
-          <p class="marketing-price">$7 <span class="marketing-price-period">/ month</span></p>
+          <p class="marketing-price">
+            $<%= typeof paypalPrice !== "undefined" ? paypalPrice : "10.00" %>
+            <span class="marketing-price-period">/ 30 days</span>
+          </p>
 
           <p>Frontier models, stronger reasoning, and persistent history for serious flight and ops analysis.</p>
 
           <ul class="marketing-list">
 
-            <li>Pro model access in the same agent panel (fair-use per month at launch)</li>
+            <li>Pro model access in the same agent panel</li>
 
             <li><strong>Persistent chat history</strong> across sessions, tied to your flights</li>
+
+            <li><strong>Chart & image visualization</strong> enabled in the agent panel</li>
 
             <li>Room for longer investigations before you hit limits</li>
 
           </ul>
 
-          <a href="/contact" class="button button-primary">Purchase</a>
+          <% if (typeof isAuth !== "undefined" && isAuth) { %>
+            <input type="hidden" id="paypal-csrf-token" value="<%= csrfToken %>" />
+            <div
+              id="paypal-pro-wrap"
+              data-paypal-client-id="<%= typeof paypalClientId !== 'undefined' ? paypalClientId : '' %>"
+              data-paypal-currency="<%= typeof paypalCurrency !== 'undefined' ? paypalCurrency : '' %>"
+            >
+              <div id="paypal-pro-button"></div>
+              <p id="paypal-pro-status" class="profile-description" style="margin-top:10px;"></p>
+            </div>
+            <script src="/public/scripts/paypal-pricing.js"></script>
+          <% } else { %>
+            <a href="/signup" class="button button-primary">Sign up to purchase</a>
+          <% } %>
 
         </article>
 

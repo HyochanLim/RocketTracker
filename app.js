@@ -7,12 +7,15 @@ const expressSession = require("express-session");
 const db = require("./data/database");
 const createSessionConfig = require("./config/session");
 const checkAuthStatus = require("./middlewares/check-auth");
+const attachEntitlements = require("./middlewares/attach-entitlements");
 const addCsrfToken = require("./middlewares/csrf-token");
 const errorHandler = require("./middlewares/error-handler");
 
 const baseRoutes = require("./routes/base.routes");
 const authRoutes = require("./routes/auth.routes");
 const trackerRoutes = require("./routes/tracker.routes");
+const billingRoutes = require("./routes/billing.routes");
+const billingController = require("./controllers/billing.controller");
 
 const app = express();
 const sessionConfig = createSessionConfig(expressSession);
@@ -20,11 +23,19 @@ const sessionConfig = createSessionConfig(expressSession);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
+// PayPal webhooks cannot send CSRF tokens; use raw body before csurf/json.
+app.post(
+  "/billing/paypal/webhook",
+  express.raw({ type: "application/json" }),
+  billingController.postPayPalWebhook
+);
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(expressSession(sessionConfig));
 app.use(csrf());
 app.use(checkAuthStatus);
+app.use(attachEntitlements);
 app.use(addCsrfToken);
 
 app.use("/public", express.static(path.join(__dirname, "public")));
@@ -43,6 +54,7 @@ if (fs.existsSync(legacyRoot)) {
 app.use(authRoutes);
 app.use(baseRoutes);
 app.use(trackerRoutes);
+app.use(billingRoutes);
 
 app.use(errorHandler);
 

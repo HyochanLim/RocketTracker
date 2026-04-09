@@ -41,6 +41,13 @@ class User {
       bio: "",
       createdAt: new Date(),
       badges: [],
+      proUntil: null,
+      proUpdatedAt: null,
+      proSource: "",
+      proStatus: "free",
+      paypalSubscriptionId: "",
+      paypalOrderId: "",
+      paypalPayerId: "",
     });
   }
 
@@ -54,7 +61,43 @@ class User {
       bio: userDoc.bio || "",
       createdAt: userDoc.createdAt || null,
       badges: Array.isArray(userDoc.badges) ? userDoc.badges : [],
+      proUntil: userDoc.proUntil || null,
     };
+  }
+
+  static isPro(userDoc, now = new Date()) {
+    if (!userDoc) return false;
+    const until = userDoc.proUntil ? new Date(userDoc.proUntil) : null;
+    if (!until || Number.isNaN(until.getTime())) return false;
+    return until.getTime() > now.getTime();
+  }
+
+  static setProUntil(userId, proUntil, meta = {}) {
+    const until = proUntil ? new Date(proUntil) : null;
+    if (!until || Number.isNaN(until.getTime())) {
+      return Promise.resolve({ matchedCount: 0, modifiedCount: 0 });
+    }
+    const update = {
+      proUntil: until,
+      proUpdatedAt: new Date(),
+    };
+    if (meta && typeof meta === "object") {
+      if (typeof meta.source === "string") update.proSource = meta.source;
+      if (typeof meta.paypalSubscriptionId === "string") update.paypalSubscriptionId = meta.paypalSubscriptionId;
+      if (typeof meta.paypalOrderId === "string") update.paypalOrderId = meta.paypalOrderId;
+      if (typeof meta.paypalPayerId === "string") update.paypalPayerId = meta.paypalPayerId;
+      if (typeof meta.status === "string") update.proStatus = meta.status;
+    }
+    return db.getDb().collection("users").updateOne(
+      { _id: new mongodb.ObjectId(userId) },
+      { $set: update }
+    );
+  }
+
+  static getByPayPalSubscriptionId(subscriptionId) {
+    const id = String(subscriptionId || "").trim();
+    if (!id) return Promise.resolve(null);
+    return db.getDb().collection("users").findOne({ paypalSubscriptionId: id });
   }
 
   static addBadge(userId, badgeId) {
