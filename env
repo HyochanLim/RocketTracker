@@ -1,5 +1,9 @@
-# Committed defaults / placeholders. Override with a gitignored `.env` for real secrets (copy this file → `.env` and edit).
-# Heroku: use Config Vars — this file is not used on Heroku unless you copy it into the slug.
+# Load order (see app.js): 1) this file  2) gitignored `.env` (override: true, local only)
+#
+# --- Heroku (웹): PC .env는 배포되지 않음. Dashboard → Settings → Config Vars ---
+#   필수(에이전트): AI_API_KEY, E2B_API_KEY
+#   권장(기본과 동일): AI_ENDPOINT, AI_MODEL (아래 공개 기본값과 같으면 생략 가능)
+#   3D: CESIUM_ION_ACCESS_TOKEN
 
 PORT=3000
 TRUST_PROXY=
@@ -13,16 +17,18 @@ SESSION_COOKIE_SECURE=false
 
 CESIUM_ION_ACCESS_TOKEN=
 
-AI_ENDPOINT=
-AI_API_KEY=
-AI_FREE_ENDPOINT=
-AI_FREE_API_KEY=
-AI_FREE_MODEL=
-AI_PRO_ENDPOINT=
-AI_PRO_API_KEY=
-AI_PRO_MODEL=
+# 공개 기본값 — 비밀 아님. Heroku에서 덮어쓰려면 같은 이름으로 Config Var 설정.
+AI_ENDPOINT=https://api.openai.com/v1/chat/completions
+AI_MODEL=gpt-5.4-mini
 AI_TIMEOUT_MS=20000
-AI_MAPPING_MODEL=
+
+# 비밀 키는 이 파일에 적지 말 것. 로컬은 `.env`, Heroku는 Config Vars.
+# AI_API_KEY=
+
+# 구 설정 호환(선택): 예전 이름만 쓰는 배포가 있으면 여전히 동작함.
+# AI_FREE_ENDPOINT=  AI_FREE_MODEL=  AI_FREE_API_KEY=
+# AI_PRO_ENDPOINT=  AI_PRO_MODEL=  AI_PRO_API_KEY=
+# AI_MAPPING_MODEL=
 
 PAYPAL_ENV=sandbox
 PAYPAL_CLIENT_ID=

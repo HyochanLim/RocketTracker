@@ -8,7 +8,7 @@ const ChatThread = require("../models/chat-thread.model");
 const { parseFlightFileToJson } = require("../logic/parsing/flight-data.parser");
 const { parseRowsWithAiAgent } = require("../logic/parsing/ai-parsing-agent");
 const { storeAiParsedData, getAiParsedData } = require("../logic/aiAgent/agent");
-const { loadAiAgentConfig, resolveModels, resolveProviderConfig } = require("../util/ai-models");
+const { loadAiAgentConfig } = require("../util/ai-models");
 const layout = require("../util/user-data-layout");
 
 function isAjaxRequest(req) {
@@ -324,10 +324,6 @@ function serializeAiParsedForSandbox(aiParsedObj) {
 async function getAgentHistory(req, res, next) {
   if (!isAjaxRequest(req)) return res.status(400).json({ ok: false, message: "Invalid request." });
   try {
-    const isPro = !!(res.locals && res.locals.isPro);
-    if (!isPro) {
-      return res.json({ ok: true, messages: [] });
-    }
     const fileId = req.query && req.query.fileId != null ? String(req.query.fileId).trim() : "";
     const thread = await ChatThread.getByUserAndFile(req.session.uid, fileId);
     const msgs = thread && Array.isArray(thread.messages) ? thread.messages : [];
@@ -343,17 +339,6 @@ async function postAgentChat(req, res, next) {
   }
   try {
     const cfg = loadAiAgentConfig();
-    if (!cfg.endpoint || !cfg.model) {
-      return res.status(503).json({ ok: false, message: "AI agent is not configured." });
-    }
-    const models = resolveModels(cfg);
-    const isPro = !!(res.locals && res.locals.isPro);
-    cfg.model = isPro ? models.proModel : models.freeModel;
-    const provider = resolveProviderConfig(cfg, isPro);
-    cfg.apiKey = provider.apiKey;
-    cfg.endpoint = provider.endpoint;
-    cfg.timeoutMs = provider.timeoutMs;
-
     if (!cfg.apiKey || !cfg.endpoint || !cfg.model) {
       return res.status(503).json({ ok: false, message: "AI agent is not configured." });
     }
@@ -393,21 +378,18 @@ async function postAgentChat(req, res, next) {
     const { runSandboxChatSession } = require("../logic/aiAgent/e2b-chat.cjs");
     const datasetKey = bodyFileId || "default";
     const out = await runSandboxChatSession(String(req.session.uid), cfg, openAiMessages, aiParsedJson, datasetKey);
-    const artifactsAllowed = isPro;
 
     const replyText = (out && out.text) || "";
-    if (isPro) {
-      const nextTranscript = trimmed.concat([{ role: "assistant", content: String(replyText).trim() }]);
-      await ChatThread.upsertMessages(req.session.uid, bodyFileId || "default", nextTranscript, { maxMessages: 120 });
-    }
+    const nextTranscript = trimmed.concat([{ role: "assistant", content: String(replyText).trim() }]);
+    await ChatThread.upsertMessages(req.session.uid, bodyFileId || "default", nextTranscript, { maxMessages: 120 });
 
     return res.json({
       ok: true,
       text: replyText,
-      result: artifactsAllowed ? (out && out.result) || null : null,
-      artifacts: artifactsAllowed ? (out && Array.isArray(out.artifacts) && out.artifacts) || [] : [],
-      executedCode: artifactsAllowed ? (out && out.executedCode) || null : null,
-      artifactsAllowed,
+      result: (out && out.result) || null,
+      artifacts: (out && Array.isArray(out.artifacts) && out.artifacts) || [],
+      executedCode: (out && out.executedCode) || null,
+      artifactsAllowed: true,
     });
   } catch (err) {
     next(err);

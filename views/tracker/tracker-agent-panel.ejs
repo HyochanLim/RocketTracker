@@ -1,14 +1,6 @@
 <div class="tracker-agent-panel">
-  <div class="tracker-agent-topchips" aria-label="Plan and model">
-    <% if (!(typeof isPro !== "undefined" && isPro)) { %>
-      <a class="tracker-agent-pro-hint" href="/pricing" aria-label="Upgrade to Pro to enable charts">
-        Charts & images require Pro
-      </a>
-    <% } %>
+  <div class="tracker-agent-topchips" aria-label="Model">
     <div class="tracker-agent-meta">
-      <span class="tracker-agent-meta-tier <%= typeof isPro !== 'undefined' && isPro ? 'is-pro' : '' %>">
-        <%= typeof aiTierLabel !== "undefined" ? aiTierLabel : "" %>
-      </span>
       <span class="tracker-agent-meta-model"><%= typeof aiModelLabel !== "undefined" ? aiModelLabel : "" %></span>
     </div>
   </div>

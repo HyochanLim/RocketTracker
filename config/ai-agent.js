@@ -1,5 +1,7 @@
 /**
- * AI settings from process.env (never cached). Call each time so .env / Heroku load order cannot strand empty values.
+ * Single AI stack for agent + row mapping: one key, one endpoint, one model.
+ * Primary env: AI_API_KEY, AI_ENDPOINT, AI_MODEL.
+ * Legacy names (AI_FREE_*, AI_PRO_*, AI_MAPPING_MODEL) still work as fallbacks.
  */
 
 function trim(s) {
@@ -11,25 +13,26 @@ function loadAiAgentConfig() {
   const timeoutParsed = Number.parseInt(timeoutRaw, 10);
   const timeoutMs = Number.isFinite(timeoutParsed) && timeoutParsed > 0 ? timeoutParsed : 20000;
 
+  const apiKey =
+    trim(process.env.AI_API_KEY) ||
+    trim(process.env.AI_FREE_API_KEY) ||
+    trim(process.env.AI_PRO_API_KEY);
+
+  const endpoint =
+    trim(process.env.AI_ENDPOINT) ||
+    trim(process.env.AI_FREE_ENDPOINT) ||
+    trim(process.env.AI_PRO_ENDPOINT);
+
+  const model =
+    trim(process.env.AI_MODEL) ||
+    trim(process.env.AI_MAPPING_MODEL) ||
+    trim(process.env.AI_FREE_MODEL) ||
+    trim(process.env.AI_PRO_MODEL);
+
   return {
-    freeModel: trim(process.env.AI_FREE_MODEL),
-    proModel: trim(process.env.AI_PRO_MODEL),
-
-    model:
-      trim(process.env.AI_MAPPING_MODEL) ||
-      trim(process.env.AI_FREE_MODEL) ||
-      trim(process.env.AI_PRO_MODEL),
-
-    endpoint:
-      trim(process.env.AI_FREE_ENDPOINT) ||
-      trim(process.env.AI_ENDPOINT) ||
-      trim(process.env.AI_PRO_ENDPOINT),
-
-    apiKey:
-      trim(process.env.AI_FREE_API_KEY) ||
-      trim(process.env.AI_API_KEY) ||
-      trim(process.env.AI_PRO_API_KEY),
-
+    apiKey,
+    endpoint,
+    model,
     timeoutMs,
   };
 }
