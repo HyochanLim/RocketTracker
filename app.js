@@ -14,6 +14,7 @@ const expressSession = require("express-session");
 const db = require("./data/database");
 const createSessionConfig = require("./config/session");
 const checkAuthStatus = require("./middlewares/check-auth");
+const attachSeo = require("./middlewares/attach-seo");
 const attachEntitlements = require("./middlewares/attach-entitlements");
 const addCsrfToken = require("./middlewares/csrf-token");
 const errorHandler = require("./middlewares/error-handler");
@@ -26,7 +27,10 @@ const billingRoutes = require("./routes/billing.routes");
 const billingController = require("./controllers/billing.controller");
 
 const app = express();
-if (["1", "true"].includes(String(process.env.TRUST_PROXY || "").trim().toLowerCase())) {
+if (
+  process.env.NODE_ENV === "production" ||
+  ["1", "true"].includes(String(process.env.TRUST_PROXY || "").trim().toLowerCase())
+) {
   app.set("trust proxy", 1);
 }
 const sessionConfig = createSessionConfig(expressSession);
@@ -51,6 +55,7 @@ app.use(express.json());
 app.use(expressSession(sessionConfig));
 app.use(csrf());
 app.use(checkAuthStatus);
+app.use(attachSeo);
 app.use(attachEntitlements);
 app.use(addCsrfToken);
 

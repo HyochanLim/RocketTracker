@@ -8,7 +8,7 @@ const ChatThread = require("../models/chat-thread.model");
 const { parseFlightFileToJson } = require("../logic/parsing/flight-data.parser");
 const { parseRowsWithAiAgent } = require("../logic/parsing/ai-parsing-agent");
 const { storeAiParsedData, getAiParsedData } = require("../logic/aiAgent/agent");
-const { loadAiAgentConfig } = require("../util/ai-models");
+const { loadAiAgentConfig, resolveModels, resolveProviderConfig } = require("../util/ai-models");
 const layout = require("../util/user-data-layout");
 
 function isAjaxRequest(req) {
@@ -339,8 +339,18 @@ async function postAgentChat(req, res, next) {
   }
   try {
     const cfg = loadAiAgentConfig();
+    const models = resolveModels(cfg);
+    cfg.model = models.freeModel;
+    const provider = resolveProviderConfig(cfg);
+    cfg.apiKey = provider.apiKey;
+    cfg.endpoint = provider.endpoint;
+    cfg.timeoutMs = provider.timeoutMs;
+
     if (!cfg.apiKey || !cfg.endpoint || !cfg.model) {
-      return res.status(503).json({ ok: false, message: "AI agent is not configured." });
+      return res.status(503).json({
+        ok: false,
+        message: "AI agent is not configured. Set AI_ENDPOINT, AI_API_KEY, and AI_MODEL.",
+      });
     }
 
     const trimmed = trimAgentChatMessages(req.body && req.body.messages, 20, 600);

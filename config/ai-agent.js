@@ -1,7 +1,6 @@
 /**
- * Single AI stack for agent + row mapping: one key, one endpoint, one model.
- * Primary env: AI_API_KEY, AI_ENDPOINT, AI_MODEL.
- * Legacy names (AI_FREE_*, AI_PRO_*, AI_MAPPING_MODEL) still work as fallbacks.
+ * Single AI stack from process.env (never cached). Call each time so .env / Heroku load order cannot strand empty values.
+ * Use: AI_ENDPOINT, AI_API_KEY, AI_MODEL, optional AI_TIMEOUT_MS.
  */
 
 function trim(s) {
@@ -13,26 +12,16 @@ function loadAiAgentConfig() {
   const timeoutParsed = Number.parseInt(timeoutRaw, 10);
   const timeoutMs = Number.isFinite(timeoutParsed) && timeoutParsed > 0 ? timeoutParsed : 20000;
 
-  const apiKey =
-    trim(process.env.AI_API_KEY) ||
-    trim(process.env.AI_FREE_API_KEY) ||
-    trim(process.env.AI_PRO_API_KEY);
-
-  const endpoint =
-    trim(process.env.AI_ENDPOINT) ||
-    trim(process.env.AI_FREE_ENDPOINT) ||
-    trim(process.env.AI_PRO_ENDPOINT);
-
-  const model =
-    trim(process.env.AI_MODEL) ||
-    trim(process.env.AI_MAPPING_MODEL) ||
-    trim(process.env.AI_FREE_MODEL) ||
-    trim(process.env.AI_PRO_MODEL);
+  const model = trim(process.env.AI_MODEL);
+  const endpoint = trim(process.env.AI_ENDPOINT);
+  const apiKey = trim(process.env.AI_API_KEY);
 
   return {
-    apiKey,
-    endpoint,
+    freeModel: model,
+    proModel: model,
     model,
+    endpoint,
+    apiKey,
     timeoutMs,
   };
 }

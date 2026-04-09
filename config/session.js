@@ -1,21 +1,5 @@
 const mongoDbStore = require("connect-mongodb-session");
-
-function mongoUri() {
-  return String(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017").trim();
-}
-
-function mongoDbName() {
-  return String(process.env.MONGODB_DB_NAME || "orbit").trim();
-}
-
-function sessionSecret() {
-  const s = String(process.env.SESSION_SECRET || "").trim();
-  if (s) return s;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("Set SESSION_SECRET in production (strong random string).");
-  }
-  return "orbit-dev-session-secret";
-}
+const { mongoUri, mongoDbName, sessionSecret } = require("../util/env-config");
 
 function sessionCookieSameSite() {
   const v = String(process.env.SESSION_COOKIE_SAMESITE || "lax").toLowerCase();

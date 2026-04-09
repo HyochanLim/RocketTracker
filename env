@@ -25,11 +25,6 @@ AI_TIMEOUT_MS=20000
 # 비밀 키는 이 파일에 적지 말 것. 로컬은 `.env`, Heroku는 Config Vars.
 # AI_API_KEY=
 
-# 구 설정 호환(선택): 예전 이름만 쓰는 배포가 있으면 여전히 동작함.
-# AI_FREE_ENDPOINT=  AI_FREE_MODEL=  AI_FREE_API_KEY=
-# AI_PRO_ENDPOINT=  AI_PRO_MODEL=  AI_PRO_API_KEY=
-# AI_MAPPING_MODEL=
-
 PAYPAL_ENV=sandbox
 PAYPAL_CLIENT_ID=
 PAYPAL_CLIENT_SECRET=
