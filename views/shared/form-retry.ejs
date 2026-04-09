@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("./head", { pageTitle: typeof pageTitle !== "undefined" ? pageTitle : "Orbit | Try again" }) %>
+  <body>
+    <%- include("./header") %>
+    <main class="container page-panel">
+      <h1>Something went stale</h1>
+      <p><%= typeof message !== "undefined" ? message : "Refresh the page and try again." %></p>
+      <a href="<%= typeof backHref !== "undefined" ? backHref : "/" %>" class="button button-primary"><%= typeof backLabel !== "undefined" ? backLabel : "Continue" %></a>
+    </main>
+  </body>
+</html>
