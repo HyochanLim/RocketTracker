@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const path = require("path");
 const fs = require("fs");
 const mongodb = require("mongodb");
@@ -20,7 +22,11 @@ const billingRoutes = require("./routes/billing.routes");
 const billingController = require("./controllers/billing.controller");
 
 const app = express();
+if (["1", "true"].includes(String(process.env.TRUST_PROXY || "").trim().toLowerCase())) {
+  app.set("trust proxy", 1);
+}
 const sessionConfig = createSessionConfig(expressSession);
+const port = Number.parseInt(String(process.env.PORT || "3000"), 10) || 3000;
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -79,8 +85,9 @@ app.use(errorHandler);
 
 db.connectToDatabase()
   .then(function () {
-    app.listen(3000);
-    console.log("Orbit running on http://localhost:3000");
+    app.listen(port, function () {
+      console.log("Orbit listening on port " + port);
+    });
   })
   .catch(function (error) {
     console.error("DB connection failed:", error);

@@ -4,7 +4,7 @@ Runtime and reference data for the app.
 
 ## Layout
 
-- `database.js` — MongoDB connection helper.
+- `database.js` — MongoDB connection helper (URI and DB name from `MONGODB_URI` / `MONGODB_DB_NAME`; see root `.env.example`).
 - `rawdata/`, `filtereddata/` — legacy/reference datasets (optional).
 - `users/<USER_OBJECT_ID>/` — **per-account workspace** (gitignored):
   - `raw/` — uploaded flight source files (csv, json, xls, xlsx).
