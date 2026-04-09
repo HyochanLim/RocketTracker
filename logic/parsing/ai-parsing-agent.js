@@ -13,11 +13,7 @@ const RULES = [
 ].join("\n");
 
 function loadAgentConfig() {
-  try {
-    return require("../../config/ai-agent.local");
-  } catch {
-    return {};
-  }
+  return require("../../config/ai-agent");
 }
 
 function toNumber(value) {

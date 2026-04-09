@@ -21,6 +21,18 @@ function recordsFromParsedJsonPayload(parsed) {
   return [];
 }
 
+/**
+ * AI 표준화 결과는 행이 있어도 매핑이 비면 위경도가 전부 null일 수 있다(AI env 미설정 등).
+ * 그때는 원본 파싱 레코드를 써야 Cesium 궤적이 나온다.
+ */
+function recordsToPersist(parsedRecords, aiParsed) {
+  const std = aiParsed && Array.isArray(aiParsed.standardizedRecords) ? aiParsed.standardizedRecords : [];
+  const m = aiParsed && aiParsed.mapping;
+  const hasLatLonColumns = !!(m && m.latitude && m.longitude);
+  if (std.length > 0 && hasLatLonColumns) return std;
+  return parsedRecords;
+}
+
 function makeSafeBaseName(filename) {
   return String(filename || "flight-data")
     .replace(/\.[^/.]+$/, "")
@@ -29,16 +41,7 @@ function makeSafeBaseName(filename) {
 }
 
 function getCesiumIonAccessToken() {
-  if (process.env.CESIUM_ION_ACCESS_TOKEN && String(process.env.CESIUM_ION_ACCESS_TOKEN).trim()) {
-    return String(process.env.CESIUM_ION_ACCESS_TOKEN).trim();
-  }
-  try {
-    const cfg = require("../config/cesium-ion.local");
-    if (cfg && typeof cfg.accessToken === "string" && cfg.accessToken.trim()) return cfg.accessToken.trim();
-  } catch {
-    /* optional local file */
-  }
-  return "";
+  return String(process.env.CESIUM_ION_ACCESS_TOKEN || "").trim();
 }
 
 async function getTracker(req, res, next) {
@@ -113,10 +116,7 @@ async function uploadTrackerFile(req, res, next) {
     const aiParsed = await parseRowsWithAiAgent(parsedRecords, {
       filename: req.file.originalname,
     });
-    const standardizedRecords =
-      aiParsed && Array.isArray(aiParsed.standardizedRecords) && aiParsed.standardizedRecords.length > 0
-        ? aiParsed.standardizedRecords
-        : parsedRecords;
+    const standardizedRecords = recordsToPersist(parsedRecords, aiParsed);
     layout.ensureUserDirs(req.session.uid);
     const parsedDir = layout.userParsedDir(req.session.uid);
 
@@ -184,10 +184,7 @@ async function rebuildParsedJsonFromRaw(flight) {
   const aiParsed = await parseRowsWithAiAgent(parsedRecords, {
     filename: flight.originalName,
   });
-  const standardizedRecords =
-    aiParsed && Array.isArray(aiParsed.standardizedRecords) && aiParsed.standardizedRecords.length > 0
-      ? aiParsed.standardizedRecords
-      : parsedRecords;
+  const standardizedRecords = recordsToPersist(parsedRecords, aiParsed);
   await fsp.mkdir(path.dirname(parsedAbs), { recursive: true });
   await fsp.writeFile(parsedAbs, JSON.stringify(standardizedRecords, null, 2), "utf-8");
   return standardizedRecords;

@@ -44,7 +44,7 @@
 
     var token = readCesiumIonToken();
     if (!token) {
-      console.warn("Cesium ion access token missing. Add config/cesium-ion.local.js or CESIUM_ION_ACCESS_TOKEN.");
+      console.warn("Cesium Ion access token missing. Set CESIUM_ION_ACCESS_TOKEN in `.env` or host environment.");
     }
     Cesium.Ion.defaultAccessToken = token;
 

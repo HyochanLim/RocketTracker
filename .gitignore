@@ -11,8 +11,6 @@ pnpm-debug.log*
 # Environment / secrets
 .env
 .env.*
-config/ai-agent.local.js
-config/cesium-ion.local.js
 
 # Per-user workspace (flight files, parsed JSON, chat JSON, profile images)
 data/users/**
