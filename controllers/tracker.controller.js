@@ -4,9 +4,11 @@ const fsp = require("fs/promises");
 const crypto = require("crypto");
 const mongodb = require("mongodb");
 const FlightFile = require("../models/flight-file.model");
+const ChatThread = require("../models/chat-thread.model");
 const { parseFlightFileToJson } = require("../logic/parsing/flight-data.parser");
 const { parseRowsWithAiAgent } = require("../logic/parsing/ai-parsing-agent");
 const { storeAiParsedData, getAiParsedData } = require("../logic/aiAgent/agent");
+const { loadAiAgentConfig, resolveModels, resolveProviderConfig } = require("../util/ai-models");
 
 function isAjaxRequest(req) {
   return req.xhr || req.get("X-Requested-With") === "XMLHttpRequest";
@@ -304,14 +306,6 @@ async function deleteTrackerFile(req, res, next) {
   }
 }
 
-function loadAiAgentConfig() {
-  try {
-    return require("../config/ai-agent.local");
-  } catch {
-    return {};
-  }
-}
-
 function trimAgentChatMessages(arr, maxMsgs, maxContentLen) {
   const slice = Array.isArray(arr) ? arr.slice(-maxMsgs) : [];
   const out = [];
@@ -333,12 +327,39 @@ function serializeAiParsedForSandbox(aiParsedObj) {
   return JSON.stringify(aiParsedObj);
 }
 
+async function getAgentHistory(req, res, next) {
+  if (!isAjaxRequest(req)) return res.status(400).json({ ok: false, message: "Invalid request." });
+  try {
+    const isPro = !!(res.locals && res.locals.isPro);
+    if (!isPro) {
+      return res.json({ ok: true, messages: [] });
+    }
+    const fileId = req.query && req.query.fileId != null ? String(req.query.fileId).trim() : "";
+    const thread = await ChatThread.getByUserAndFile(req.session.uid, fileId);
+    const msgs = thread && Array.isArray(thread.messages) ? thread.messages : [];
+    return res.json({ ok: true, messages: msgs });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function postAgentChat(req, res, next) {
   if (!isAjaxRequest(req)) {
     return res.status(400).json({ ok: false, message: "Invalid request." });
   }
   try {
     const cfg = loadAiAgentConfig();
+    if (!cfg.endpoint || !cfg.model) {
+      return res.status(503).json({ ok: false, message: "AI agent is not configured." });
+    }
+    const models = resolveModels(cfg);
+    const isPro = !!(res.locals && res.locals.isPro);
+    cfg.model = isPro ? models.proModel : models.freeModel;
+    const provider = resolveProviderConfig(cfg, isPro);
+    cfg.apiKey = provider.apiKey;
+    cfg.endpoint = provider.endpoint;
+    cfg.timeoutMs = provider.timeoutMs;
+
     if (!cfg.apiKey || !cfg.endpoint || !cfg.model) {
       return res.status(503).json({ ok: false, message: "AI agent is not configured." });
     }
@@ -378,16 +399,25 @@ async function postAgentChat(req, res, next) {
     const { runSandboxChatSession } = require("../logic/aiAgent/e2b-chat.cjs");
     const datasetKey = bodyFileId || "default";
     const out = await runSandboxChatSession(String(req.session.uid), cfg, openAiMessages, aiParsedJson, datasetKey);
+    const artifactsAllowed = isPro;
+
+    const replyText = (out && out.text) || "";
+    if (isPro) {
+      const nextTranscript = trimmed.concat([{ role: "assistant", content: String(replyText).trim() }]);
+      await ChatThread.upsertMessages(req.session.uid, bodyFileId || "default", nextTranscript, { maxMessages: 120 });
+    }
+
     return res.json({
       ok: true,
-      text: (out && out.text) || "",
-      result: (out && out.result) || null,
-      artifacts: (out && Array.isArray(out.artifacts) && out.artifacts) || [],
-      executedCode: (out && out.executedCode) || null,
+      text: replyText,
+      result: artifactsAllowed ? (out && out.result) || null : null,
+      artifacts: artifactsAllowed ? (out && Array.isArray(out.artifacts) && out.artifacts) || [] : [],
+      executedCode: artifactsAllowed ? (out && out.executedCode) || null : null,
+      artifactsAllowed,
     });
   } catch (err) {
     next(err);
   }
 }
 
-module.exports = { getTracker, uploadTrackerFile, getFlightData, deleteTrackerFile, postAgentChat };
+module.exports = { getTracker, uploadTrackerFile, getFlightData, deleteTrackerFile, getAgentHistory, postAgentChat };
