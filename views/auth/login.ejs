@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%- include("../shared/head", { pageTitle: "Orbit | Login" }) %>
+  <%- include("../shared/head", {
+    pageTitle: "Orbit | Login",
+    metaDescription: "Log in to your Orbit account to access the flight tracker and dashboard.",
+    metaRobots: "noindex, nofollow"
+  }) %>
   <body>
     <%- include("../shared/header") %>
     <main class="container auth-layout">

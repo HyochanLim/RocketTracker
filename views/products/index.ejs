@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%- include("../shared/head", { pageTitle: "Orbit | Products" }) %>
+  <%- include("../shared/head", {
+    pageTitle: "Orbit | Products",
+    metaDescription: "Orbit products: web dashboard for flight logs and globe trajectory, plus Data Testbed (beta) for live serial telemetry on desktop."
+  }) %>
   <% const safeIsAuth = typeof isAuth === "undefined" ? false : isAuth; %>
   <body>
     <%- include("../shared/header") %>

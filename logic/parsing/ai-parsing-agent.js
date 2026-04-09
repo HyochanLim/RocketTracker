@@ -12,13 +12,7 @@ const RULES = [
   "warnings must be short.",
 ].join("\n");
 
-function loadAgentConfig() {
-  try {
-    return require("../../config/ai-agent.local");
-  } catch {
-    return {};
-  }
-}
+const { loadAiAgentConfig, resolveModels, resolveProviderConfig } = require("../../util/ai-models");
 
 function toNumber(value) {
   const n = Number(value);
@@ -70,19 +64,22 @@ function standardizeRecords(records, mapping) {
 }
 
 async function maybeCallLLM(records, meta) {
-  const cfg = loadAgentConfig();
-  if (!cfg || !cfg.apiKey || !cfg.endpoint || !cfg.model) return null;
+  const cfg = loadAiAgentConfig();
+  const { freeModel, proModel } = resolveModels(cfg);
+  const model = freeModel || proModel;
+  const provider = resolveProviderConfig(cfg, false);
+  if (!provider.apiKey || !provider.endpoint || !model) return null;
   const headerKeys = Object.keys(records[0] || {});
   const userPrompt = `${PROMPT_TEMPLATE}\n\n${RULES}\n\nFilename: ${meta && meta.filename ? meta.filename : "unknown"}\nHeader keys: ${JSON.stringify(headerKeys)}`;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), Number(cfg.timeoutMs || 20000));
+  const timeout = setTimeout(() => controller.abort(), provider.timeoutMs);
   try {
-    const res = await fetch(cfg.endpoint, {
+    const res = await fetch(provider.endpoint, {
       method: "POST",
       signal: controller.signal,
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${provider.apiKey}` },
       body: JSON.stringify({
-        model: cfg.model,
+        model,
         messages: [{ role: "system", content: "Return valid JSON only." }, { role: "user", content: userPrompt }],
         temperature: 0.1,
       }),

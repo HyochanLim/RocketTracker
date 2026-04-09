@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Orbit</title>
+    <meta
+      name="description"
+      content="Orbit — flight-ops: logs, trajectory, and agent-assisted review."
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0a0a0a;
+        --text: #ffffff;
+        --muted: rgba(255, 255, 255, 0.58);
+        --accent: #39ff14;
+        --line: rgba(255, 255, 255, 0.12);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1.25rem;
+        line-height: 1.5;
+      }
+      main {
+        width: min(36rem, 100%);
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 0.35rem;
+        font-size: clamp(1.75rem, 4vw, 2.25rem);
+        letter-spacing: -0.02em;
+      }
+      p {
+        margin: 0 0 1rem;
+        color: var(--muted);
+      }
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+        margin-top: 1.25rem;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      a:hover {
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .note {
+        margin-top: 2rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--line);
+        font-size: 0.88rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Orbit</h1>
+      <p>Flight-ops stack: ingest logs, globe trajectory, and agent-style review.</p>
+      <p class="links">
+        <a href="https://github.com/HyochanLim/RocketTracker">GitHub</a>
+      </p>
+      <p class="note">
+        This page is the static GitHub Pages root. The full web app (Express, uploads, tracker) runs on a server
+        when you deploy it separately.
+      </p>
+    </main>
+  </body>
+</html>

@@ -8,6 +8,7 @@ const expressSession = require("express-session");
 const db = require("./data/database");
 const createSessionConfig = require("./config/session");
 const checkAuthStatus = require("./middlewares/check-auth");
+const attachSeo = require("./middlewares/attach-seo");
 const attachEntitlements = require("./middlewares/attach-entitlements");
 const addCsrfToken = require("./middlewares/csrf-token");
 const errorHandler = require("./middlewares/error-handler");
@@ -20,6 +21,9 @@ const billingRoutes = require("./routes/billing.routes");
 const billingController = require("./controllers/billing.controller");
 
 const app = express();
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
 const sessionConfig = createSessionConfig(expressSession);
 
 app.set("view engine", "ejs");
@@ -37,6 +41,7 @@ app.use(express.json());
 app.use(expressSession(sessionConfig));
 app.use(csrf());
 app.use(checkAuthStatus);
+app.use(attachSeo);
 app.use(attachEntitlements);
 app.use(addCsrfToken);
 
@@ -79,8 +84,10 @@ app.use(errorHandler);
 
 db.connectToDatabase()
   .then(function () {
-    app.listen(3000);
-    console.log("Orbit running on http://localhost:3000");
+    const port = Number(process.env.PORT) || 3000;
+    app.listen(port, function () {
+      console.log("Orbit listening on port " + port);
+    });
   })
   .catch(function (error) {
     console.error("DB connection failed:", error);

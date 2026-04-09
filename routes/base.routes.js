@@ -7,6 +7,8 @@ const router = express.Router();
 router.get("/", baseController.getHome);
 router.get("/about", baseController.getAbout);
 router.get("/products", baseController.getProducts);
+router.get("/robots.txt", baseController.getRobots);
+router.get("/sitemap.xml", baseController.getSitemap);
 router.get("/pricing", baseController.getPricing);
 router.get("/resources", baseController.getResources);
 router.get("/contact", baseController.getContact);

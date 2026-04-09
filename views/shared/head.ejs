@@ -2,11 +2,51 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= pageTitle || "Orbit" %></title>
+  <% const _desc = typeof metaDescription === "string" ? metaDescription.trim() : ""; %>
+  <% if (_desc) { %>
+  <meta name="description" content="<%= _desc %>" />
+  <% } %>
+  <% const _robots = typeof metaRobots === "string" && metaRobots.trim() ? metaRobots.trim() : "index, follow"; %>
+  <meta name="robots" content="<%= _robots %>" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <% const _base = typeof seoBaseUrl === "string" ? seoBaseUrl : ""; %>
+  <% const _canon = typeof seoCanonicalUrl === "string" ? seoCanonicalUrl : ""; %>
+  <% if (_canon) { %>
+  <link rel="canonical" href="<%= _canon %>" />
+  <% } %>
+  <% const _ogTitle = typeof ogTitle === "string" && ogTitle.trim() ? ogTitle.trim() : (pageTitle || "Orbit"); %>
+  <% const _ogDesc = typeof ogDescription === "string" && ogDescription.trim() ? ogDescription.trim() : _desc; %>
+  <% const _ogUrl = typeof ogUrl === "string" && ogUrl.trim() ? ogUrl.trim() : _canon; %>
+  <% const _ogImgRel = typeof ogImage === "string" && ogImage.trim() ? ogImage.trim() : "/public/assets/orbit-logo.png"; %>
+  <% const _ogImg = _base ? _base + _ogImgRel : ""; %>
+  <meta property="og:type" content="<%= typeof ogType === "string" && ogType.trim() ? ogType.trim() : "website" %>" />
+  <meta property="og:title" content="<%= _ogTitle %>" />
+  <% if (_ogDesc) { %>
+  <meta property="og:description" content="<%= _ogDesc %>" />
+  <% } %>
+  <% if (_ogUrl) { %>
+  <meta property="og:url" content="<%= _ogUrl %>" />
+  <% } %>
+  <% if (_ogImg) { %>
+  <meta property="og:image" content="<%= _ogImg %>" />
+  <% } %>
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="<%= _ogTitle %>" />
+  <% if (_ogDesc) { %>
+  <meta name="twitter:description" content="<%= _ogDesc %>" />
+  <% } %>
+  <% if (_ogImg) { %>
+  <meta name="twitter:image" content="<%= _ogImg %>" />
+  <% } %>
   <link rel="icon" href="/public/assets/orbit-favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/public/styles/main.css" />
   <% if (typeof extraStyles !== "undefined" && Array.isArray(extraStyles)) { %>
     <% extraStyles.forEach(function (styleHref) { %>
       <link rel="stylesheet" href="<%= styleHref %>" />
     <% }) %>
+  <% } %>
+  <% if (typeof seoJsonLd !== "undefined" && seoJsonLd) { %>
+  <script type="application/ld+json"><%- JSON.stringify(seoJsonLd) %></script>
   <% } %>
 </head>

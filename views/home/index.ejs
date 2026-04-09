@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%- include("../shared/head", { pageTitle: "Orbit | Home" }) %>
+  <% const _orbitSite = typeof seoBaseUrl === "string" && seoBaseUrl ? seoBaseUrl : ""; %>
+  <% const _homeLd = _orbitSite ? { "@context": "https://schema.org", "@type": "WebSite", "name": "Orbit", "url": _orbitSite + "/", "description": "Flight-ops stack for flight logs, globe trajectory, 3D attitude, and AI-assisted flight review." } : null; %>
+  <%- include("../shared/head", {
+    pageTitle: "Orbit | Home",
+    metaDescription: "Orbit is a flight-ops stack: ingest logs, visualize trajectory on the globe, inspect attitude in 3D, and review missions with an AI assistant.",
+    seoJsonLd: _homeLd
+  }) %>
   <body class="page-home">
     <%- include("../shared/header") %>
     <main class="container hero hero-landing">
