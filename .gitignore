@@ -15,7 +15,11 @@ pnpm-debug.log*
 config/ai-agent.local.js
 config/cesium-ion.local.js
 
-# Uploaded user files (optional: keep folder, ignore contents)
+# Per-user workspace (flight files, parsed JSON, chat JSON, profile images)
+data/users/**
+!data/users/.gitkeep
+
+# Legacy per-user storage (existing installs)
 uploads/avatars/*
 !uploads/avatars/.gitkeep
 data/storage/raw_uploads/**

@@ -4,6 +4,22 @@ const { resolveBadges } = require("../util/badges");
 const fs = require("fs");
 const path = require("path");
 
+function deletePreviousAvatarIfAny(sessionUid, currentImageUrl) {
+  if (!currentImageUrl || typeof currentImageUrl !== "string") return;
+  const profilePrefix = `/profile-media/${sessionUid}/`;
+  if (currentImageUrl.startsWith(profilePrefix)) {
+    const name = path.basename(currentImageUrl.slice(profilePrefix.length));
+    if (!name || name === "." || name === "..") return;
+    const abs = path.join(__dirname, "..", "data", "users", sessionUid, "profile", name);
+    fs.unlink(abs, function () {});
+    return;
+  }
+  if (currentImageUrl.startsWith("/uploads/avatars/")) {
+    const abs = path.join(__dirname, "..", currentImageUrl.replace(/^\//, ""));
+    fs.unlink(abs, function () {});
+  }
+}
+
 function getHome(req, res) {
   res.render("home/index");
 }
@@ -71,7 +87,7 @@ async function updateProfile(req, res, next) {
   const bio = typeof req.body.bio === "string" ? req.body.bio.trim().slice(0, 1200) : "";
   const email = req.session.user && req.session.user.email ? req.session.user.email : "";
   const currentImageUrl = res.locals.user && res.locals.user.imageUrl ? res.locals.user.imageUrl : "";
-  const uploadedAvatarPath = req.file ? `/uploads/avatars/${req.file.filename}` : "";
+  const uploadedAvatarPath = req.file ? `/profile-media/${req.session.uid}/${req.file.filename}` : "";
   const imageUrl = uploadedAvatarPath || currentImageUrl;
   const userData = { ...res.locals.user, id: req.session.uid, email, displayName, imageUrl, bio };
 
@@ -108,9 +124,8 @@ async function updateProfile(req, res, next) {
       isAdmin: req.session.isAdmin,
     };
 
-    if (uploadedAvatarPath && currentImageUrl && currentImageUrl.startsWith("/uploads/avatars/")) {
-      const oldPath = path.join(__dirname, "..", currentImageUrl.replace(/^\//, ""));
-      fs.unlink(oldPath, function () {});
+    if (uploadedAvatarPath) {
+      deletePreviousAvatarIfAny(req.session.uid, currentImageUrl);
     }
 
     authUtil.createUserSession(req, nextUserSessionData, function () {

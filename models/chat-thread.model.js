@@ -1,5 +1,8 @@
+const fsp = require("fs/promises");
+const path = require("path");
 const mongodb = require("mongodb");
 const db = require("../data/database");
+const layout = require("../util/user-data-layout");
 
 function normalizeFileId(fileId) {
   const t = String(fileId || "").trim();
@@ -12,15 +15,58 @@ function clampMessages(list, max) {
   return arr.slice(arr.length - max);
 }
 
+async function readThreadFile(userId, fileId) {
+  const abs = layout.chatThreadAbsPath(userId, fileId);
+  try {
+    const text = await fsp.readFile(abs, "utf-8");
+    const data = JSON.parse(text);
+    return {
+      messages: Array.isArray(data.messages) ? data.messages : [],
+      createdAt: data.createdAt || null,
+    };
+  } catch (err) {
+    if (err && err.code === "ENOENT") return null;
+    throw err;
+  }
+}
+
 class ChatThread {
   static async getByUserAndFile(userId, fileId) {
     const uid = String(userId || "").trim();
     if (!uid) return null;
     const fid = normalizeFileId(fileId);
-    return db.getDb().collection("chat_threads").findOne({
+
+    let fromFile = await readThreadFile(uid, fid);
+    if (fromFile) {
+      return {
+        userId: new mongodb.ObjectId(uid),
+        fileId: fid,
+        messages: fromFile.messages,
+      };
+    }
+
+    const doc = await db.getDb().collection("chat_threads").findOne({
       userId: new mongodb.ObjectId(uid),
       fileId: fid,
     });
+    if (!doc || !Array.isArray(doc.messages)) return null;
+
+    layout.ensureUserDirs(uid);
+    const abs = layout.chatThreadAbsPath(uid, fid);
+    const payload = {
+      fileId: fid,
+      createdAt: doc.createdAt ? new Date(doc.createdAt).toISOString() : new Date().toISOString(),
+      updatedAt: doc.updatedAt ? new Date(doc.updatedAt).toISOString() : new Date().toISOString(),
+      messages: doc.messages,
+      migratedFromMongoAt: new Date().toISOString(),
+    };
+    await fsp.writeFile(abs, JSON.stringify(payload, null, 2), "utf-8");
+
+    return {
+      userId: new mongodb.ObjectId(uid),
+      fileId: fid,
+      messages: doc.messages,
+    };
   }
 
   static async upsertMessages(userId, fileId, messages, opts = {}) {
@@ -30,7 +76,7 @@ class ChatThread {
     const max = typeof opts.maxMessages === "number" && opts.maxMessages > 0 ? opts.maxMessages : 120;
     const safeMsgs = clampMessages(
       (Array.isArray(messages) ? messages : [])
-        .map((m) => {
+        .map(function (m) {
           if (!m || typeof m !== "object") return null;
           const role = String(m.role || "").trim();
           const content = String(m.content || "").trim();
@@ -42,17 +88,27 @@ class ChatThread {
       max
     );
 
-    await db.getDb().collection("chat_threads").updateOne(
-      { userId: new mongodb.ObjectId(uid), fileId: fid },
-      {
-        $setOnInsert: { createdAt: new Date() },
-        $set: { updatedAt: new Date(), messages: safeMsgs },
-      },
-      { upsert: true }
-    );
+    layout.ensureUserDirs(uid);
+    const abs = layout.chatThreadAbsPath(uid, fid);
+    let createdAt = new Date().toISOString();
+    try {
+      const prev = JSON.parse(await fsp.readFile(abs, "utf-8"));
+      if (prev && prev.createdAt) createdAt = prev.createdAt;
+    } catch (_) {
+      /* new file */
+    }
+
+    const payload = {
+      fileId: fid,
+      createdAt,
+      updatedAt: new Date().toISOString(),
+      messages: safeMsgs,
+    };
+    await fsp.mkdir(path.dirname(abs), { recursive: true });
+    await fsp.writeFile(abs, JSON.stringify(payload, null, 2), "utf-8");
+
     return { ok: true, count: safeMsgs.length };
   }
 }
 
 module.exports = ChatThread;
-

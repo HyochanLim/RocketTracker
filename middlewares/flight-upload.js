@@ -1,13 +1,21 @@
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
-
-const flightDir = path.join(__dirname, "..", "data", "storage", "raw_uploads");
-fs.mkdirSync(flightDir, { recursive: true });
+const layout = require("../util/user-data-layout");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, flightDir);
+    const uid = req.session && req.session.uid;
+    if (!uid) {
+      return cb(new Error("Not authenticated"));
+    }
+    try {
+      const dir = layout.userRawDir(uid);
+      fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    } catch (err) {
+      cb(err);
+    }
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname || "").toLowerCase();

@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs");
+const mongodb = require("mongodb");
 const express = require("express");
 const csrf = require("csurf");
 const expressSession = require("express-session");
@@ -10,6 +11,7 @@ const checkAuthStatus = require("./middlewares/check-auth");
 const attachEntitlements = require("./middlewares/attach-entitlements");
 const addCsrfToken = require("./middlewares/csrf-token");
 const errorHandler = require("./middlewares/error-handler");
+const userDataLayout = require("./util/user-data-layout");
 
 const baseRoutes = require("./routes/base.routes");
 const authRoutes = require("./routes/auth.routes");
@@ -43,6 +45,23 @@ app.use("/logic", express.static(path.join(__dirname, "logic")));
 const uploadsRoot = path.join(__dirname, "uploads");
 fs.mkdirSync(uploadsRoot, { recursive: true });
 app.use("/uploads", express.static(uploadsRoot));
+
+app.get("/profile-media/:userId/:filename", function (req, res, next) {
+  const uid = String(req.params.userId || "");
+  const filename = String(req.params.filename || "");
+  const safeName = path.basename(filename);
+  if (!mongodb.ObjectId.isValid(uid) || !safeName || safeName !== filename || filename.includes("..")) {
+    return res.sendStatus(404);
+  }
+  const root = path.resolve(userDataLayout.userProfileDir(uid));
+  const abs = path.resolve(userDataLayout.userProfileDir(uid), safeName);
+  if (!abs.startsWith(root + path.sep)) {
+    return res.sendStatus(404);
+  }
+  res.sendFile(abs, function (err) {
+    if (err) next(err);
+  });
+});
 
 const legacyRoot = path.join(__dirname, "..", "rocket_Tracker-main");
 if (fs.existsSync(legacyRoot)) {

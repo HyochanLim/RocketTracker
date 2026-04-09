@@ -9,6 +9,7 @@ const { parseFlightFileToJson } = require("../logic/parsing/flight-data.parser")
 const { parseRowsWithAiAgent } = require("../logic/parsing/ai-parsing-agent");
 const { storeAiParsedData, getAiParsedData } = require("../logic/aiAgent/agent");
 const { loadAiAgentConfig, resolveModels, resolveProviderConfig } = require("../util/ai-models");
+const layout = require("../util/user-data-layout");
 
 function isAjaxRequest(req) {
   return req.xhr || req.get("X-Requested-With") === "XMLHttpRequest";
@@ -116,24 +117,23 @@ async function uploadTrackerFile(req, res, next) {
       aiParsed && Array.isArray(aiParsed.standardizedRecords) && aiParsed.standardizedRecords.length > 0
         ? aiParsed.standardizedRecords
         : parsedRecords;
-    const parsedDir = path.join(__dirname, "..", "data", "storage", "parsed_json", req.session.uid);
-    await fsp.mkdir(parsedDir, { recursive: true });
+    layout.ensureUserDirs(req.session.uid);
+    const parsedDir = layout.userParsedDir(req.session.uid);
 
     const safeBase = makeSafeBaseName(req.file.originalname);
     const parsedFilename = `${safeBase}-${Date.now()}.json`;
     const parsedAbsolutePath = path.join(parsedDir, parsedFilename);
     await fsp.writeFile(parsedAbsolutePath, JSON.stringify(standardizedRecords, null, 2), "utf-8");
 
-    const relativeStoredPath = path.relative(path.join(__dirname, ".."), parsedAbsolutePath).replace(/\\/g, "/");
+    const relativeStoredPath = layout.relativeFromProject(parsedAbsolutePath);
 
-    const rawDir = path.join(__dirname, "..", "data", "storage", "raw_uploads", req.session.uid);
-    await fsp.mkdir(rawDir, { recursive: true });
+    const rawDir = layout.userRawDir(req.session.uid);
     const rawExt = path.extname(req.file.originalname || "").toLowerCase() || ".dat";
     const rawFilename = `${fileHash.slice(0, 16)}-${safeBase}${rawExt}`;
     const rawPermanentPath = path.join(rawDir, rawFilename);
     await fsp.copyFile(absolutePath, rawPermanentPath);
     await fsp.unlink(absolutePath);
-    const relativeRawPath = path.relative(path.join(__dirname, ".."), rawPermanentPath).replace(/\\/g, "/");
+    const relativeRawPath = layout.relativeFromProject(rawPermanentPath);
 
     const insertResult = await FlightFile.create({
       userId: new mongodb.ObjectId(req.session.uid),
@@ -172,7 +172,7 @@ async function uploadTrackerFile(req, res, next) {
   }
 }
 
-const projectRoot = path.join(__dirname, "..");
+const projectRoot = layout.PROJECT_ROOT;
 
 async function rebuildParsedJsonFromRaw(flight) {
   if (!flight.rawStoredPath) {
@@ -262,10 +262,7 @@ function storagePathBelongsToUser(rel, sessionUid) {
   const uid = String(sessionUid || "");
   if (!uid) return false;
   const norm = String(rel).replace(/\\/g, "/");
-  return (
-    norm.startsWith("data/storage/parsed_json/" + uid + "/") ||
-    norm.startsWith("data/storage/raw_uploads/" + uid + "/")
-  );
+  return layout.isUserStoragePathForUid(norm, uid);
 }
 
 async function unlinkIfExists(absPath) {
