@@ -1070,6 +1070,8 @@ body.page-home .hero-actions--landing .button {
   border-radius: 4px;
   padding: 0.65rem 1.25rem;
   letter-spacing: 0.04em;
+  transition: transform 0.18s ease, box-shadow 0.22s ease, background-color 0.22s ease,
+    border-color 0.22s ease, color 0.22s ease, filter 0.22s ease;
 }
 
 body.page-home .button-primary {
@@ -1077,17 +1079,23 @@ body.page-home .button-primary {
 }
 
 body.page-home .button-primary:hover {
-  filter: brightness(0.94);
+  filter: none;
+  background: #e8e8e8;
+  color: var(--black);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.5);
 }
 
 body.page-home .button-secondary--light {
   border-color: rgba(255, 255, 255, 0.42);
   color: var(--white);
+  background: transparent;
 }
 
 body.page-home .button-secondary--light:hover {
-  border-color: rgba(255, 255, 255, 0.62);
-  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--black);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.35);
 }
 
 body.page-home .hero-landing-aside {

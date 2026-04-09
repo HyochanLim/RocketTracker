@@ -1,5 +1,11 @@
 const path = require("path");
 const fs = require("fs");
+
+require("dotenv").config({ path: path.join(__dirname, "env") });
+if (fs.existsSync(path.join(__dirname, ".env"))) {
+  require("dotenv").config({ path: path.join(__dirname, ".env"), override: true });
+}
+
 const mongodb = require("mongodb");
 const express = require("express");
 const csrf = require("csurf");
@@ -21,10 +27,18 @@ const billingRoutes = require("./routes/billing.routes");
 const billingController = require("./controllers/billing.controller");
 
 const app = express();
-if (process.env.NODE_ENV === "production") {
+if (
+  process.env.NODE_ENV === "production" ||
+  ["1", "true"].includes(String(process.env.TRUST_PROXY || "").trim().toLowerCase())
+) {
   app.set("trust proxy", 1);
 }
 const sessionConfig = createSessionConfig(expressSession);
+let port = 3000;
+if (process.env.PORT) {
+  const parsed = Number.parseInt(String(process.env.PORT), 10);
+  if (!Number.isNaN(parsed)) port = parsed;
+}
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -84,7 +98,6 @@ app.use(errorHandler);
 
 db.connectToDatabase()
   .then(function () {
-    const port = Number(process.env.PORT) || 3000;
     app.listen(port, function () {
       console.log("Orbit listening on port " + port);
     });

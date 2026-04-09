@@ -5,7 +5,7 @@ const { runSandboxChatSession } = require("../logic/aiAgent/e2b-chat.cjs");
 
 function loadAiAgentConfig() {
   try {
-    return require("../config/ai-agent.local");
+    return require("../config/ai-agent")();
   } catch {
     return null;
   }
@@ -53,7 +53,9 @@ async function main() {
   const e2b = readE2bKey();
 
   if (!cfg || !cfg.apiKey || !cfg.endpoint || !cfg.model) {
-    console.error("FAIL: create config/ai-agent.local.js with apiKey, endpoint, model (see controllers/tracker.controller.js).");
+    console.error(
+      "FAIL: set AI_API_KEY (or AI_FREE_*), AI_ENDPOINT (or AI_FREE_ENDPOINT), AI_FREE_MODEL in `.env` (override `env` defaults).",
+    );
     process.exit(1);
   }
   if (!e2b) {

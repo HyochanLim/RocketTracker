@@ -1,0 +1,34 @@
+# Committed defaults / placeholders. Override with a gitignored `.env` for real secrets (copy this file → `.env` and edit).
+# Heroku: use Config Vars — this file is not used on Heroku unless you copy it into the slug.
+
+PORT=3000
+TRUST_PROXY=
+NODE_ENV=development
+
+MONGODB_URI=mongodb://127.0.0.1:27017
+MONGODB_DB_NAME=orbit
+
+SESSION_SECRET=dev-only-replace-in-dot-env-for-real-secret
+SESSION_COOKIE_SECURE=false
+
+CESIUM_ION_ACCESS_TOKEN=
+
+AI_ENDPOINT=
+AI_API_KEY=
+AI_FREE_ENDPOINT=
+AI_FREE_API_KEY=
+AI_FREE_MODEL=
+AI_PRO_ENDPOINT=
+AI_PRO_API_KEY=
+AI_PRO_MODEL=
+AI_TIMEOUT_MS=20000
+AI_MAPPING_MODEL=
+
+PAYPAL_ENV=sandbox
+PAYPAL_CLIENT_ID=
+PAYPAL_CLIENT_SECRET=
+PAYPAL_WEBHOOK_ID=
+PAYPAL_PRO_CURRENCY=USD
+PAYPAL_PRO_PRICE=10.00
+
+E2B_API_KEY=
