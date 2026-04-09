@@ -5,7 +5,7 @@ const { runSandboxChatSession } = require("../logic/aiAgent/e2b-chat.cjs");
 
 function loadAiAgentConfig() {
   try {
-    return require("../config/ai-agent");
+    return require("../config/ai-agent")();
   } catch {
     return null;
   }

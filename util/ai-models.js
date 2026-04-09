@@ -1,5 +1,5 @@
 function loadAiAgentConfig() {
-  return require("../config/ai-agent");
+  return require("../config/ai-agent")();
 }
 
 function resolveModels(cfg) {
