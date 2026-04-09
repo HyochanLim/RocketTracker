@@ -53,6 +53,49 @@
     return wrap;
   }
 
+  function clearThreadUi() {
+    if (!messagesEl) return;
+    messagesEl.innerHTML = "";
+    if (welcome) welcome.hidden = false;
+    messagesEl.hidden = true;
+  }
+
+  function renderTranscript(list) {
+    clearThreadUi();
+    var arr = Array.isArray(list) ? list : [];
+    for (var i = 0; i < arr.length; i += 1) {
+      var m = arr[i];
+      if (!m || typeof m !== "object") continue;
+      var role = String(m.role || "");
+      var content = String(m.content || "");
+      if (!role || !content) continue;
+      appendBubble(role, content);
+    }
+    scrollThread();
+  }
+
+  async function loadHistoryForFile(fileId) {
+    try {
+      var fid = String(fileId || "").trim();
+      var res = await fetch("/tracker/agent/history?fileId=" + encodeURIComponent(fid), {
+        method: "GET",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+      var data = await res.json().catch(function () {
+        return {};
+      });
+      if (!res.ok || !data.ok) return;
+      var msgs = Array.isArray(data.messages) ? data.messages : [];
+      transcript = msgs.slice();
+      renderTranscript(transcript);
+      if (fid && typeof window.__trackerEnsureVisualizerForFile === "function") {
+        window.__trackerEnsureVisualizerForFile(fid);
+      }
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
   function appendArtifacts(parent, artifacts) {
     if (!parent || !artifacts || !Array.isArray(artifacts) || artifacts.length === 0) return;
     for (var i = 0; i < artifacts.length; i += 1) {
@@ -274,6 +317,9 @@
   });
   fitInputHeight();
   syncSend();
+
+  window.__trackerAgentLoadHistory = loadHistoryForFile;
+  loadHistoryForFile((typeof window !== "undefined" && window.__trackerActiveFileId) || "");
 
   window.__trackerFitAgentInput = fitInputHeight;
 })();

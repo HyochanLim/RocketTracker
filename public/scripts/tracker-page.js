@@ -60,6 +60,23 @@
     }, 150);
   }
 
+  async function ensureVisualizerForFile(fileId) {
+    var fid = String(fileId || "").trim();
+    if (!fid) return;
+    try {
+      setAnalyzeLoading(true, "Loading flight data…");
+      var records = await getSavedFileRecords(fid);
+      window.__trackerActiveFileId = fid;
+      selectSavedFile(fid);
+      updateAnalyzeButtonVisibility();
+      showVisualizerWithRecords(records);
+    } catch (_) {
+      // If the file can't be loaded, do nothing (history can still render).
+    } finally {
+      setAnalyzeLoading(false);
+    }
+  }
+
   function clearWarning() {
     if (!warningBox) return;
     warningBox.textContent = "";
@@ -222,6 +239,7 @@
         setAnalyzeLoading(true, "Loading processed flight data…");
         var uploadedRecords = await getSavedFileRecords(uploaded.file._id);
         window.__trackerActiveFileId = uploaded.file._id;
+        if (typeof window.__trackerAgentLoadHistory === "function") window.__trackerAgentLoadHistory(uploaded.file._id);
         showVisualizerWithRecords(uploadedRecords);
         return;
       }
@@ -229,6 +247,7 @@
       setAnalyzeLoading(true, "Loading flight data…");
       var savedRecords = await getSavedFileRecords(selectedSavedFileId);
       window.__trackerActiveFileId = selectedSavedFileId;
+      if (typeof window.__trackerAgentLoadHistory === "function") window.__trackerAgentLoadHistory(selectedSavedFileId);
       showVisualizerWithRecords(savedRecords);
     } catch (error) {
       showWarning(error && error.message ? error.message : "Failed to prepare analysis.");
@@ -273,6 +292,8 @@
   if (showVisualizerButton) showVisualizerButton.addEventListener("click", handleAnalyzeClick);
 
   updateAnalyzeButtonVisibility();
+
+  window.__trackerEnsureVisualizerForFile = ensureVisualizerForFile;
 })();
 
 (function initAgentDockToggle() {

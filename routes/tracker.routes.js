@@ -9,6 +9,7 @@ router.get("/tracker", protectRoutes, trackerController.getTracker);
 router.post("/tracker/upload", protectRoutes, uploadFlightFile.single("file"), trackerController.uploadTrackerFile);
 router.get("/tracker/file/:fileId/data", protectRoutes, resolveSelectedFlightFile, trackerController.getFlightData);
 router.post("/tracker/file/:fileId/delete", protectRoutes, resolveSelectedFlightFile, trackerController.deleteTrackerFile);
+router.get("/tracker/agent/history", protectRoutes, trackerController.getAgentHistory);
 router.post("/tracker/agent/chat", protectRoutes, trackerController.postAgentChat);
 
 module.exports = router;
