@@ -11,7 +11,6 @@ pnpm-debug.log*
 # Environment / secrets
 .env
 .env.*
-!.env.example
 config/ai-agent.local.js
 config/cesium-ion.local.js
 
