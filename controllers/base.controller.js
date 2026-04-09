@@ -32,6 +32,10 @@ function getContact(req, res) {
   res.render("contact/index");
 }
 
+function getDownload(req, res) {
+  res.render("download/index");
+}
+
 function isAjaxRequest(req) {
   return req.xhr || req.get("X-Requested-With") === "XMLHttpRequest";
 }
@@ -137,6 +141,7 @@ module.exports = {
   getPricing,
   getResources,
   getContact,
+  getDownload,
   redirectOwnProfile,
   getProfile,
   updateProfile,

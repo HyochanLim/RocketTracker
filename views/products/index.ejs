@@ -14,20 +14,53 @@
         </p>
       </header>
       <section class="marketing-section">
-        <h2>Orbit Tracker</h2>
-        <p>
-          Core web app for ingesting logs, Cesium-based orbit view, and an agent panel for flight-aware Q&amp;A. The
-          default assistant uses a fast, cost-efficient model; <a href="/pricing">Pro</a> unlocks heavier models (Claude /
-          flagship-class) and persistent chat history for deep reviews.
-        </p>
-        <p class="marketing-cta-row">
-          <% if (safeIsAuth) { %>
-            <a href="/tracker" class="button button-primary">Open tracker</a>
-          <% } else { %>
-            <a href="/signup" class="button button-primary">Get started</a>
-          <% } %>
-          <a href="/pricing" class="button button-secondary">Agent &amp; pricing</a>
-        </p>
+        <div class="marketing-pricing-grid">
+          <article class="marketing-price-card">
+            <h2>Orbit Dashboard</h2>
+            <p>
+              Web dashboard for ingesting logs, Cesium-based orbit view, and an agent panel for flight-aware Q&amp;A. <a
+                href="/pricing"
+                >Pro</a
+              >
+              unlocks heavier models and persistent chat history for deeper reviews.
+            </p>
+            <ul class="marketing-list">
+              <li>Upload flight logs and align mission time</li>
+              <li>Trajectory on the globe + attitude in 3D</li>
+              <li>Assistant-style ops panel</li>
+            </ul>
+            <p class="marketing-cta-row">
+              <% if (safeIsAuth) { %>
+                <a href="/tracker" class="button button-primary">Open dashboard</a>
+              <% } else { %>
+                <a href="/signup" class="button button-primary">Get started</a>
+              <% } %>
+              <a href="/pricing" class="button button-secondary">Pricing</a>
+            </p>
+          </article>
+
+          <article class="marketing-price-card marketing-price-card--featured">
+            <div class="marketing-resource-heading">
+              <h2>Data Testbed</h2>
+              <span class="marketing-beta-pill" aria-label="Beta feature">Beta</span>
+            </div>
+            <p>
+              Desktop companion for real-time telemetry from serial devices. Auto-shape fields and visualize a testbed
+              dashboard without custom UI per board.
+            </p>
+            <ul class="marketing-list">
+              <li>Auto-detect numeric vs state fields and suggest charts</li>
+              <li>Live plots, event log, and session recording / replay</li>
+              <li>Auto-reconnect to devices even if the COM port changes</li>
+            </ul>
+            <p class="marketing-cta-row">
+              <span style="color: var(--muted); max-width: 56ch;"
+                >To use Data Testbed, download the desktop app (hardware access required).</span
+              >
+              <a href="/download" class="button button-primary">Download</a>
+            </p>
+          </article>
+        </div>
       </section>
     </main>
   </body>

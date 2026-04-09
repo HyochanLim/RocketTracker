@@ -10,6 +10,7 @@ router.get("/products", baseController.getProducts);
 router.get("/pricing", baseController.getPricing);
 router.get("/resources", baseController.getResources);
 router.get("/contact", baseController.getContact);
+router.get("/download", baseController.getDownload);
 router.get("/profile", protectRoutes, baseController.redirectOwnProfile);
 router.get("/profile/:id", protectRoutes, baseController.getProfile);
 router.post("/profile/:id", protectRoutes, uploadAvatar.single("avatar-image"), baseController.updateProfile);
