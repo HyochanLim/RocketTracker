@@ -67,7 +67,7 @@ async function maybeCallLLM(records, meta) {
   const cfg = loadAiAgentConfig();
   const { freeModel, proModel } = resolveModels(cfg);
   const model = freeModel || proModel;
-  const provider = resolveProviderConfig(cfg, false);
+  const provider = resolveProviderConfig(cfg);
   if (!provider.apiKey || !provider.endpoint || !model) return null;
   const headerKeys = Object.keys(records[0] || {});
   const userPrompt = `${PROMPT_TEMPLATE}\n\n${RULES}\n\nFilename: ${meta && meta.filename ? meta.filename : "unknown"}\nHeader keys: ${JSON.stringify(headerKeys)}`;

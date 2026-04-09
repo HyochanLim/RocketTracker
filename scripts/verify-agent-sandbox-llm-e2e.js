@@ -54,7 +54,7 @@ async function main() {
 
   if (!cfg || !cfg.apiKey || !cfg.endpoint || !cfg.model) {
     console.error(
-      "FAIL: set AI_API_KEY (or AI_FREE_*), AI_ENDPOINT (or AI_FREE_ENDPOINT), AI_FREE_MODEL in `.env` (override `env` defaults).",
+      "FAIL: set AI_API_KEY, AI_ENDPOINT, and AI_MODEL in `.env` (override `env` defaults).",
     );
     process.exit(1);
   }

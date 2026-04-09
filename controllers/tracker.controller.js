@@ -343,19 +343,19 @@ async function postAgentChat(req, res, next) {
   }
   try {
     const cfg = loadAiAgentConfig();
-    if (!cfg.endpoint || !cfg.model) {
-      return res.status(503).json({ ok: false, message: "AI agent is not configured." });
-    }
-    const models = resolveModels(cfg);
     const isPro = !!(res.locals && res.locals.isPro);
-    cfg.model = isPro ? models.proModel : models.freeModel;
-    const provider = resolveProviderConfig(cfg, isPro);
+    const models = resolveModels(cfg);
+    cfg.model = models.freeModel;
+    const provider = resolveProviderConfig(cfg);
     cfg.apiKey = provider.apiKey;
     cfg.endpoint = provider.endpoint;
     cfg.timeoutMs = provider.timeoutMs;
 
     if (!cfg.apiKey || !cfg.endpoint || !cfg.model) {
-      return res.status(503).json({ ok: false, message: "AI agent is not configured." });
+      return res.status(503).json({
+        ok: false,
+        message: "AI agent is not configured. Set AI_ENDPOINT, AI_API_KEY, and AI_MODEL.",
+      });
     }
 
     const trimmed = trimAgentChatMessages(req.body && req.body.messages, 20, 600);
