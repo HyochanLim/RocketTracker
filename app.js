@@ -26,7 +26,11 @@ if (["1", "true"].includes(String(process.env.TRUST_PROXY || "").trim().toLowerC
   app.set("trust proxy", 1);
 }
 const sessionConfig = createSessionConfig(expressSession);
-const port = Number.parseInt(String(process.env.PORT || "3000"), 10) || 3000;
+let port = 3000;
+if (process.env.PORT) {
+  const parsed = Number.parseInt(String(process.env.PORT), 10);
+  if (!Number.isNaN(parsed)) port = parsed;
+}
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
