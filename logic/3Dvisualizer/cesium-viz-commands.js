@@ -2,6 +2,9 @@
 /**
  * Declarative visualization layer: agent/LLM outputs result.vizCommands[]; this applies them to the viewer.
  * Entity ids are prefixed with "viz-" and cleared by op "clearOverlays". Core flight ids (launch-point, flight-trajectory-polyline) are untouched.
+ *
+ * Position aliases (LLM-friendly): top-level lon/lat, longitude/latitude, x/y (heuristic), or nested point.{x,y|lon,lat}.
+ * Styling: color or style.color; pixelSize or style.radius / style.pixelSize. label string or label.{text,offset}.
  */
 (function () {
   var PREFIX = "viz-";
@@ -34,14 +37,93 @@
     }
   }
 
+  /** If one value is outside latitude range, treat it as longitude (handles x=126, y=35). */
+  function inferLonLat(x, y) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    if (x < -90 || x > 90) return { lon: x, lat: y };
+    if (y < -90 || y > 90) return { lon: y, lat: x };
+    return { lon: x, lat: y };
+  }
+
+  /**
+   * lon/lat/height from command or common LLM shapes (point.x/y, x/y, longitude/latitude).
+   */
   function readPosition(cmd) {
-    var lon = Number(cmd.lon);
-    var lat = Number(cmd.lat);
-    var h = cmd.heightM != null ? Number(cmd.heightM) : cmd.alt != null ? Number(cmd.alt) : 0;
+    if (!cmd || typeof cmd !== "object") return null;
+
+    var lon = Number(cmd.lon != null ? cmd.lon : cmd.longitude);
+    var lat = Number(cmd.lat != null ? cmd.lat : cmd.latitude);
+    var h = 0;
+
+    if (!Number.isFinite(lon) || !Number.isFinite(lat)) {
+      if (cmd.x != null && cmd.y != null) {
+        var ll = inferLonLat(Number(cmd.x), Number(cmd.y));
+        if (ll) {
+          lon = ll.lon;
+          lat = ll.lat;
+        }
+      }
+    }
+
+    if (!Number.isFinite(lon) || !Number.isFinite(lat)) {
+      var pt = cmd.point;
+      if (pt && typeof pt === "object") {
+        var px = pt.x != null ? pt.x : pt.lon != null ? pt.lon : pt.longitude;
+        var py = pt.y != null ? pt.y : pt.lat != null ? pt.lat : pt.latitude;
+        if (px != null && py != null) {
+          var ll2 = inferLonLat(Number(px), Number(py));
+          if (ll2) {
+            lon = ll2.lon;
+            lat = ll2.lat;
+          }
+        }
+        if (pt.z != null && Number.isFinite(Number(pt.z))) h = Number(pt.z);
+        else if (pt.heightM != null && Number.isFinite(Number(pt.heightM))) h = Number(pt.heightM);
+        else if (pt.alt != null && Number.isFinite(Number(pt.alt))) h = Number(pt.alt);
+      }
+    }
+
+    if (cmd.heightM != null && Number.isFinite(Number(cmd.heightM))) h = Number(cmd.heightM);
+    else if (cmd.alt != null && Number.isFinite(Number(cmd.alt))) h = Number(cmd.alt);
+    else if (cmd.elevation != null && Number.isFinite(Number(cmd.elevation))) h = Number(cmd.elevation);
+
     if (!Number.isFinite(lon) || !Number.isFinite(lat)) return null;
     if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
     if (!Number.isFinite(h)) h = 0;
     return { lon: lon, lat: lat, h: h };
+  }
+
+  function readLabelText(cmd) {
+    if (cmd.text != null && String(cmd.text).trim()) return String(cmd.text);
+    if (cmd.label == null) return "";
+    if (typeof cmd.label === "string") return String(cmd.label);
+    if (typeof cmd.label === "object" && cmd.label.text != null) return String(cmd.label.text);
+    return String(cmd.label);
+  }
+
+  function readStyleColor(cmd) {
+    if (cmd.color != null) return cmd.color;
+    if (cmd.style && cmd.style.color != null) return cmd.style.color;
+    return null;
+  }
+
+  function readPixelSize(cmd, fallback) {
+    var fb = fallback != null ? fallback : 14;
+    if (cmd.pixelSize != null && Number.isFinite(Number(cmd.pixelSize))) return Number(cmd.pixelSize);
+    if (cmd.style && typeof cmd.style === "object") {
+      if (cmd.style.pixelSize != null && Number.isFinite(Number(cmd.style.pixelSize))) return Number(cmd.style.pixelSize);
+      if (cmd.style.radius != null && Number.isFinite(Number(cmd.style.radius))) return Number(cmd.style.radius);
+      if (cmd.style.size != null && Number.isFinite(Number(cmd.style.size))) return Number(cmd.style.size);
+    }
+    return fb;
+  }
+
+  function readLabelPixelOffset(cmd) {
+    var lo = cmd.label && typeof cmd.label === "object" ? cmd.label.offset : null;
+    if (Array.isArray(lo) && lo.length >= 2 && Number.isFinite(Number(lo[0])) && Number.isFinite(Number(lo[1]))) {
+      return new Cesium.Cartesian2(Number(lo[0]), Number(lo[1]));
+    }
+    return new Cesium.Cartesian2(0, -32);
   }
 
   /**
@@ -86,14 +168,15 @@
           var pid = fullId(cmd.id != null ? cmd.id : "point-" + i);
           var oldP = viewer.entities.getById(pid);
           if (oldP) viewer.entities.remove(oldP);
-          var labelText = cmd.label != null ? String(cmd.label) : cmd.text != null ? String(cmd.text) : "";
+          var labelText = readLabelText(cmd).trim();
+          var labelOffset = readLabelPixelOffset(cmd);
           viewer.entities.add({
             id: pid,
             name: cmd.name != null ? String(cmd.name) : pid,
             position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, p.h),
             point: {
-              pixelSize: cmd.pixelSize != null ? Number(cmd.pixelSize) : 14,
-              color: parseColor(cmd.color, "#f6d365"),
+              pixelSize: readPixelSize(cmd, 14),
+              color: parseColor(readStyleColor(cmd), "#f6d365"),
               outlineColor: Cesium.Color.BLACK,
               outlineWidth: 2,
             },
@@ -105,7 +188,7 @@
                   outlineColor: Cesium.Color.BLACK,
                   outlineWidth: 2,
                   style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                  pixelOffset: new Cesium.Cartesian2(0, -32),
+                  pixelOffset: labelOffset,
                   disableDepthTestDistance: Number.POSITIVE_INFINITY,
                 }
               : undefined,
@@ -131,7 +214,7 @@
             polyline: {
               positions: Cesium.Cartesian3.fromDegreesArrayHeights(flat),
               width: cmd.width != null ? Number(cmd.width) : 3,
-              material: parseColor(cmd.color, "#7ec8e3").withAlpha(
+              material: parseColor(readStyleColor(cmd), "#7ec8e3").withAlpha(
                 cmd.alpha != null ? Math.min(1, Math.max(0, Number(cmd.alpha))) : 0.92,
               ),
               clampToGround: !!cmd.clampToGround,
@@ -157,11 +240,12 @@
             name: cmd.name != null ? String(cmd.name) : polyId,
             polygon: {
               hierarchy: Cesium.Cartesian3.fromDegreesArray(ring),
-              material: parseColor(cmd.fillColor || cmd.color, "#7ec8e3").withAlpha(
-                cmd.fillAlpha != null ? Math.min(1, Math.max(0, Number(cmd.fillAlpha))) : 0.35,
-              ),
+              material: parseColor(
+                cmd.fillColor || cmd.color || (cmd.style && cmd.style.fillColor) || readStyleColor(cmd),
+                "#7ec8e3",
+              ).withAlpha(cmd.fillAlpha != null ? Math.min(1, Math.max(0, Number(cmd.fillAlpha))) : 0.35),
               outline: cmd.outline !== false,
-              outlineColor: parseColor(cmd.outlineColor, "#ffffff").withAlpha(0.9),
+              outlineColor: parseColor(cmd.outlineColor || (cmd.style && cmd.style.outlineColor), "#ffffff").withAlpha(0.9),
             },
           });
           applied += 1;
