@@ -7,6 +7,7 @@ const FlightFile = require("../models/flight-file.model");
 const ChatThread = require("../models/chat-thread.model");
 const { parseFlightFileToJson } = require("../logic/parsing/flight-data.parser");
 const { parseRowsWithAiAgent } = require("../logic/parsing/ai-parsing-agent");
+const { buildParseInterpretation } = require("../logic/parsing/parse-interpretation");
 const { storeAiParsedData, getAiParsedData } = require("../logic/aiAgent/agent");
 const { loadAiAgentConfig, resolveModels, resolveProviderConfig } = require("../util/ai-models");
 const layout = require("../util/user-data-layout");
@@ -151,6 +152,7 @@ async function uploadTrackerFile(req, res, next) {
     storeAiParsedData(req.session.uid, standardizedRecords);
 
     if (isAjaxRequest(req)) {
+      const parseInterpretation = buildParseInterpretation(aiParsed, { filename: req.file.originalname });
       return res.json({
         ok: true,
         uploaded: true,
@@ -160,6 +162,7 @@ async function uploadTrackerFile(req, res, next) {
           size: req.file.size,
           storedPath: relativeStoredPath,
         },
+        parseInterpretation,
       });
     }
 
@@ -321,6 +324,25 @@ function serializeAiParsedForSandbox(aiParsedObj) {
   return JSON.stringify(aiParsedObj);
 }
 
+async function postAgentThreadReset(req, res, next) {
+  if (!isAjaxRequest(req)) {
+    return res.status(400).json({ ok: false, message: "Invalid request." });
+  }
+  if (!req.session.uid) {
+    return res.status(401).json({ ok: false, message: "로그인이 필요합니다. 페이지를 새로고침한 뒤 다시 시도하세요." });
+  }
+  try {
+    const bodyFileId = req.body && req.body.fileId != null ? String(req.body.fileId).trim() : "";
+    const cleared = await ChatThread.clearForUserAndFile(req.session.uid, bodyFileId || "default");
+    if (!cleared || !cleared.ok) {
+      return res.status(500).json({ ok: false, message: "대화 저장소를 비우지 못했습니다." });
+    }
+    return res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function getAgentHistory(req, res, next) {
   if (!isAjaxRequest(req)) return res.status(400).json({ ok: false, message: "Invalid request." });
   try {
@@ -328,6 +350,84 @@ async function getAgentHistory(req, res, next) {
     const thread = await ChatThread.getByUserAndFile(req.session.uid, fileId);
     const msgs = thread && Array.isArray(thread.messages) ? thread.messages : [];
     return res.json({ ok: true, messages: msgs });
+  } catch (err) {
+    next(err);
+  }
+}
+
+const MAX_AGENT_CODE_CHARS = 300_000;
+
+async function postAgentRun(req, res, next) {
+  if (!isAjaxRequest(req)) {
+    return res.status(400).json({ ok: false, message: "Invalid request." });
+  }
+  try {
+    const code = req.body && req.body.code != null ? String(req.body.code) : "";
+    const trimmed = code.trim();
+    if (!trimmed) {
+      return res.status(422).json({ ok: false, message: "Missing code." });
+    }
+    if (trimmed.length > MAX_AGENT_CODE_CHARS) {
+      return res.status(422).json({ ok: false, message: "Code is too long." });
+    }
+
+    let aiParsed = getAiParsedData(req.session.uid);
+    const bodyFileId = req.body && req.body.fileId != null ? String(req.body.fileId).trim() : "";
+    if (!aiParsed && bodyFileId && mongodb.ObjectId.isValid(bodyFileId)) {
+      const doc = await FlightFile.findByIdForUser(req.session.uid, bodyFileId);
+      if (!doc) {
+        return res.status(404).json({ ok: false, message: "Saved file not found." });
+      }
+      if (!storagePathBelongsToUser(doc.storedPath, req.session.uid)) {
+        return res.status(403).json({ ok: false, message: "Access denied." });
+      }
+      try {
+        const rawText = await fsp.readFile(path.join(projectRoot, doc.storedPath), "utf-8");
+        const parsedRoot = JSON.parse(rawText);
+        aiParsed = Array.isArray(parsedRoot) ? { records: parsedRoot } : parsedRoot;
+        storeAiParsedData(req.session.uid, parsedRoot);
+      } catch {
+        return res.status(422).json({ ok: false, message: "Could not read flight data." });
+      }
+    }
+
+    if (!aiParsed) {
+      return res.status(422).json({ ok: false, message: "No flight data loaded. Open a saved file or upload first." });
+    }
+
+    const aiParsedJson = serializeAiParsedForSandbox(aiParsed);
+    const { runPythonInSandbox } = require("../logic/aiAgent/e2b-chat.cjs");
+    const datasetKey = bodyFileId || "default";
+
+    let out;
+    try {
+      out = await runPythonInSandbox(String(req.session.uid), datasetKey, trimmed, aiParsedJson);
+    } catch (err) {
+      const msg = err && err.message ? String(err.message) : "Sandbox run failed.";
+      return res.status(502).json({ ok: false, message: msg });
+    }
+
+    const summary =
+      out.result && typeof out.result === "object" && out.result.summary != null
+        ? String(out.result.summary).trim()
+        : "";
+    const text = summary || (out.stdout && String(out.stdout).trim()) || "Run finished (no summary in result.json).";
+
+    const resResult = out.result || null;
+    const vizCommands =
+      resResult && Array.isArray(resResult.vizCommands) ? resResult.vizCommands : null;
+
+    return res.json({
+      ok: true,
+      text,
+      result: resResult,
+      vizCommands,
+      artifacts: Array.isArray(out.artifacts) ? out.artifacts : [],
+      executedCode: trimmed,
+      stdout: out.stdout || "",
+      stderr: out.stderr || "",
+      artifactsAllowed: true,
+    });
   } catch (err) {
     next(err);
   }
@@ -393,10 +493,15 @@ async function postAgentChat(req, res, next) {
     const nextTranscript = trimmed.concat([{ role: "assistant", content: String(replyText).trim() }]);
     await ChatThread.upsertMessages(req.session.uid, bodyFileId || "default", nextTranscript, { maxMessages: 120 });
 
+    const resResult = (out && out.result) || null;
+    const vizCommands =
+      resResult && Array.isArray(resResult.vizCommands) ? resResult.vizCommands : null;
+
     return res.json({
       ok: true,
       text: replyText,
-      result: (out && out.result) || null,
+      result: resResult,
+      vizCommands,
       artifacts: (out && Array.isArray(out.artifacts) && out.artifacts) || [],
       executedCode: (out && out.executedCode) || null,
       artifactsAllowed: true,
@@ -406,4 +511,13 @@ async function postAgentChat(req, res, next) {
   }
 }
 
-module.exports = { getTracker, uploadTrackerFile, getFlightData, deleteTrackerFile, getAgentHistory, postAgentChat };
+module.exports = {
+  getTracker,
+  uploadTrackerFile,
+  getFlightData,
+  deleteTrackerFile,
+  getAgentHistory,
+  postAgentThreadReset,
+  postAgentChat,
+  postAgentRun,
+};

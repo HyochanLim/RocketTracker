@@ -72,39 +72,58 @@
         </div>
 
         <section id="trackerVisualizerSection" class="tracker-visualizer-section tracker-hidden-section">
-          <button
-            type="button"
-            class="tracker-agent-edge-toggle"
-            id="tracker-agent-toggle"
-            aria-expanded="false"
-            aria-controls="tracker-agent-dock"
-            aria-label="Open AI assistant panel"
-          >
-            <svg
-              class="tracker-agent-edge-toggle__icon"
-              width="12"
-              height="24"
-              viewBox="0 0 12 24"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <path fill="currentColor" d="M7.5 4L2 12l5.5 8H9L3.5 12 9 4H7.5z" />
-            </svg>
-          </button>
+          <div
+            id="tracker-parse-banner"
+            class="tracker-parse-banner tracker-hidden-section"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></div>
           <div class="tracker-visualizer-workbench" id="tracker-visualizer-workbench">
             <div class="tracker-visualizer-main">
               <div class="tracker-visualizer-map-slot">
                 <div id="cesiumContainer" class="tracker-visualizer-root"></div>
               </div>
             </div>
-            <aside
-              class="tracker-agent-dock"
-              id="tracker-agent-dock"
-              aria-label="AI assistant"
-              aria-hidden="true"
-            >
-              <%- include("tracker-agent-panel") %>
-            </aside>
+            <div class="tracker-agent-sidebar" id="tracker-agent-sidebar">
+              <button
+                type="button"
+                class="tracker-agent-edge-toggle"
+                id="tracker-agent-toggle"
+                aria-expanded="false"
+                aria-controls="tracker-agent-dock"
+                aria-label="Open AI assistant panel"
+              >
+                <svg
+                  class="tracker-agent-edge-toggle__icon"
+                  width="12"
+                  height="24"
+                  viewBox="0 0 12 24"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path fill="currentColor" d="M7.5 4L2 12l5.5 8H9L3.5 12 9 4H7.5z" />
+                </svg>
+              </button>
+              <aside
+                class="tracker-agent-dock"
+                id="tracker-agent-dock"
+                aria-label="AI assistant"
+                aria-hidden="true"
+              >
+                <div
+                  class="tracker-agent-dock-resize"
+                  id="tracker-agent-dock-resize"
+                  role="separator"
+                  aria-orientation="vertical"
+                  aria-label="AI 패널 너비 조절"
+                  tabindex="0"
+                ></div>
+                <div class="tracker-agent-dock-inner">
+                  <%- include("tracker-agent-panel") %>
+                </div>
+              </aside>
+            </div>
           </div>
         </section>
       </div>
@@ -116,6 +135,7 @@
       <script src="/logic/3Dvisualizer/cesium-viewer.js"></script>
       <script src="/logic/3Dvisualizer/cesium.trajectory.js"></script>
       <script src="/logic/3Dvisualizer/trajectory.js"></script>
+      <script src="/logic/3Dvisualizer/cesium-viz-commands.js"></script>
       <script src="/logic/3Dvisualizer/cesium.visual.js"></script>
     </main>
   </body>

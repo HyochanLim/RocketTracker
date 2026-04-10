@@ -109,6 +109,25 @@ class ChatThread {
 
     return { ok: true, count: safeMsgs.length };
   }
+
+  /** Empty messages and start a fresh conversation for this file (same JSON file, new createdAt). */
+  static async clearForUserAndFile(userId, fileId) {
+    const uid = String(userId || "").trim();
+    if (!uid) return { ok: false, reason: "no_user" };
+    const fid = normalizeFileId(fileId);
+    layout.ensureUserDirs(uid);
+    const abs = layout.chatThreadAbsPath(uid, fid);
+    const now = new Date().toISOString();
+    const payload = {
+      fileId: fid,
+      createdAt: now,
+      updatedAt: now,
+      messages: [],
+    };
+    await fsp.mkdir(path.dirname(abs), { recursive: true });
+    await fsp.writeFile(abs, JSON.stringify(payload, null, 2), "utf-8");
+    return { ok: true };
+  }
 }
 
 module.exports = ChatThread;

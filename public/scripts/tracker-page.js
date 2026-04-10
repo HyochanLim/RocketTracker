@@ -14,6 +14,7 @@
   var analyzeLoadingText = document.getElementById("tracker-analyze-loading-text");
   var selectedSavedFileId = "";
   var warningTimer = null;
+  var parseBanner = document.getElementById("tracker-parse-banner");
 
   function setAnalyzeLoading(active, message) {
     if (!analyzeLoading) return;
@@ -85,6 +86,46 @@
       window.clearTimeout(warningTimer);
       warningTimer = null;
     }
+  }
+
+  function hideParseBanner() {
+    if (!parseBanner) return;
+    parseBanner.innerHTML = "";
+    parseBanner.classList.add("tracker-hidden-section");
+    parseBanner.hidden = true;
+  }
+
+  /**
+   * @param {object} interpretation - from server parseInterpretation (lines[], promptForUser, confidence)
+   */
+  function showParseInterpretation(interpretation) {
+    if (!parseBanner || !interpretation || !Array.isArray(interpretation.lines) || interpretation.lines.length === 0) {
+      hideParseBanner();
+      return;
+    }
+    parseBanner.hidden = false;
+    parseBanner.classList.remove("tracker-hidden-section");
+
+    var esc = escapeHtml;
+    var conf =
+      typeof interpretation.confidence === "number"
+        ? Math.round(interpretation.confidence * 100)
+        : null;
+    var head =
+      '<p class="tracker-parse-banner-title">' +
+      esc(interpretation.promptForUser || "Does this parsing look correct?") +
+      (conf != null ? " <span class=\"tracker-parse-banner-conf\">(auto confidence ~" + conf + "%)</span>" : "") +
+      "</p><ul class=\"tracker-parse-banner-list\">";
+    var items = interpretation.lines
+      .map(function (line) {
+        return "<li>" + esc(line) + "</li>";
+      })
+      .join("");
+    var dismiss =
+      '</ul><button type="button" class="button button-ghost tracker-parse-banner-dismiss">Dismiss</button>';
+    parseBanner.innerHTML = head + items + dismiss;
+    var btn = parseBanner.querySelector(".tracker-parse-banner-dismiss");
+    if (btn) btn.addEventListener("click", hideParseBanner);
   }
 
   function showWarning(message) {
@@ -228,6 +269,7 @@
       }
 
       if (hasUpload) {
+        hideParseBanner();
         setAnalyzeLoading(
           true,
           "Analyzing flight data (AI mapping)…"
@@ -241,9 +283,11 @@
         window.__trackerActiveFileId = uploaded.file._id;
         if (typeof window.__trackerAgentLoadHistory === "function") window.__trackerAgentLoadHistory(uploaded.file._id);
         showVisualizerWithRecords(uploadedRecords);
+        showParseInterpretation(uploaded.parseInterpretation || null);
         return;
       }
 
+      hideParseBanner();
       setAnalyzeLoading(true, "Loading flight data…");
       var savedRecords = await getSavedFileRecords(selectedSavedFileId);
       window.__trackerActiveFileId = selectedSavedFileId;
@@ -263,6 +307,7 @@
       if (fileInput) fileInput.value = "";
       updateAnalyzeButtonVisibility();
       clearWarning();
+      hideParseBanner();
     });
   }
   function clickTargetElement(ev) {
@@ -371,4 +416,116 @@
   }
 
   window.__trackerSetAgentOpen = setOpen;
+})();
+
+/** Drag left edge of AI dock to change width; total range ~5rem around viewport default. */
+(function initAgentDockResize() {
+  var workbench = document.getElementById("tracker-visualizer-workbench");
+  var dock = document.getElementById("tracker-agent-dock");
+  var handle = document.getElementById("tracker-agent-dock-resize");
+  if (!workbench || !dock || !handle) return;
+
+  var RANGE_REM = 5;
+  var dragging = false;
+  var startX = 0;
+  var startW = 0;
+  /** @type {number | null} */
+  var currentPx = null;
+
+  function remPx() {
+    return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  }
+
+  function centerDockPx() {
+    return Math.min(352, window.innerWidth * 0.32);
+  }
+
+  function limits() {
+    var c = centerDockPx();
+    var half = (RANGE_REM * remPx()) / 2;
+    var minW = Math.max(220, Math.round(c - half));
+    var maxW = Math.min(Math.round(c + half), Math.max(minW + 1, window.innerWidth - 80));
+    return { min: minW, max: maxW };
+  }
+
+  function setDockWidth(px) {
+    var L = limits();
+    var v = Math.round(Math.min(L.max, Math.max(L.min, px)));
+    currentPx = v;
+    workbench.style.setProperty("--tracker-agent-dock-w", v + "px");
+  }
+
+  function resizeCesium() {
+    var v = window.getCesiumViewer && window.getCesiumViewer();
+    if (v && typeof v.resize === "function") v.resize();
+  }
+
+  function isResizeDisabled() {
+    return window.matchMedia && window.matchMedia("(max-width: 960px)").matches;
+  }
+
+  function onPointerMove(ev) {
+    if (!dragging) return;
+    var dx = ev.clientX - startX;
+    setDockWidth(startW + dx);
+  }
+
+  function endDrag(ev) {
+    if (!dragging) return;
+    dragging = false;
+    dock.classList.remove("is-resizing");
+    try {
+      if (ev && typeof ev.pointerId === "number" && handle.hasPointerCapture(ev.pointerId)) {
+        handle.releasePointerCapture(ev.pointerId);
+      }
+    } catch (_) {
+      /* ignore */
+    }
+    document.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointerup", endDrag);
+    document.removeEventListener("pointercancel", endDrag);
+    window.setTimeout(function () {
+      resizeCesium();
+      requestAnimationFrame(resizeCesium);
+    }, 50);
+    window.setTimeout(resizeCesium, 400);
+  }
+
+  handle.addEventListener("pointerdown", function (ev) {
+    if (ev.button !== 0) return;
+    if (isResizeDisabled()) return;
+    if (!workbench.classList.contains("is-agent-open")) return;
+    ev.preventDefault();
+    dragging = true;
+    startX = ev.clientX;
+    var rect = dock.getBoundingClientRect();
+    startW = currentPx != null ? currentPx : rect.width;
+    dock.classList.add("is-resizing");
+    try {
+      handle.setPointerCapture(ev.pointerId);
+    } catch (_) {
+      /* ignore */
+    }
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", endDrag);
+    document.addEventListener("pointercancel", endDrag);
+  });
+
+  window.addEventListener("resize", function () {
+    if (currentPx == null) return;
+    setDockWidth(currentPx);
+    resizeCesium();
+  });
+
+  handle.addEventListener("keydown", function (ev) {
+    if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+    if (isResizeDisabled()) return;
+    if (!workbench.classList.contains("is-agent-open")) return;
+    ev.preventDefault();
+    var step = remPx() * 0.25;
+    var base = currentPx != null ? currentPx : dock.getBoundingClientRect().width;
+    if (ev.key === "ArrowLeft") setDockWidth(base - step);
+    else setDockWidth(base + step);
+    resizeCesium();
+  });
 })();

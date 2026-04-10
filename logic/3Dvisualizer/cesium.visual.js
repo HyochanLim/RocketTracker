@@ -12,6 +12,8 @@
     var viewer = await window.initCesiumViewer();
     if (!viewer) return;
 
+    window.__trackerLastFlightRecords = Array.isArray(rawRecords) ? rawRecords : [];
+
     if (typeof window.applyCesiumFlightOverlay === "function") {
       await window.applyCesiumFlightOverlay(viewer, rawRecords);
     }

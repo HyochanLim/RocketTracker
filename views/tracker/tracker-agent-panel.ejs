@@ -1,8 +1,17 @@
 <div class="tracker-agent-panel">
-  <div class="tracker-agent-topchips" aria-label="Model">
+  <div class="tracker-agent-topchips" aria-label="Assistant toolbar">
     <div class="tracker-agent-meta">
       <span class="tracker-agent-meta-model"><%= typeof aiModelLabel !== "undefined" ? aiModelLabel : "" %></span>
     </div>
+    <button
+      type="button"
+      class="tracker-agent-new-chat"
+      id="tracker-agent-new-chat"
+      aria-label="New conversation"
+      title="New conversation"
+    >
+      <span aria-hidden="true">+</span>
+    </button>
   </div>
   <div class="tracker-agent-thread" id="tracker-agent-thread" role="log" aria-live="polite">
     <div class="tracker-agent-welcome" id="tracker-agent-welcome">

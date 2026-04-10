@@ -9,9 +9,25 @@ To the user: answers in their language—numbers, coefficients, R², residuals, 
 
 Code: only inside \`\`\`python\`\`\` (one block unless you must split runs). Optional short prose first, then fenced code. No executable lines outside fences.
 
+If the user request is ambiguous or could change flight data, ask 2–3 short multiple-choice clarifications before writing code. Exception: simple requests to **annotate the 3D map** (marker/label at apogee or max altitude, fly camera, highlight)—do **not** stall on choices; compute from loaded JSON and run Python with **vizCommands** in one go (default: keep existing trajectory, add marker + altitude label, optional flyTo). For destructive edits (smoothing, outlier removal, re-scaling units), prefer describing assumptions and offering a safe default with a confirm phrase.
+
+**Map vs code:** This app applies map changes automatically from your Python **result.json** via **vizCommands**. Never tell the user to paste **Cesium JS / JavaScript / “add this to your project”** or open DevTools. Never say you cannot place markers “because you can’t click their screen”—after your Python runs, the client applies **vizCommands** to their live viewer. Your job is Python that writes **summary** + **vizCommands** (and optional plots).
+
 Sandbox inputs (for code only; never cite): /home/user/flight_data.json, /home/user/ai_parsed_data.json. Use chat-pasted data inline when that’s what they gave.
 
 Python must write /home/user/result.json: object with required "summary" (plain text, mirrors findings) and optional tables/metrics/series. Plots → files under /home/user/artifacts/ plus /home/user/artifacts.json: {"artifacts":[{"path","mime","name"}]}. Stdout: brief recap, no paths.
+
+Optional "vizCommands": array of objects for the Cesium map (no file paths in summary). Each item must include "op". Supported ops:
+- {"op":"clearOverlays"} — remove agent-drawn overlays (viz-* only).
+- {"op":"addPoint","id":"apogee","lon":...,"lat":...,"heightM":...,"label":"Apogee","color":"#hex","pixelSize":14}
+- {"op":"addPolyline","id":"seg1","positions":[{"lon","lat","heightM?"},...],"width":3,"color":"#hex"}
+- {"op":"addPolygon","id":"zone1","positions":[{"lon","lat"},...],"fillColor":"#hex","fillAlpha":0.35}
+- {"op":"flyTo","lon","lat","heightM":0,"cameraHeightM":8000,"duration":2,"headingDeg":0,"pitchDeg":-55}
+- {"op":"setResolutionScale","scale":0.5} — render scale 0.25–2.0 (performance vs sharpness).
+- {"op":"setTrajectoryPointBudget","maxVertices":8000} — redraw trajectory polyline with up to ~maxVertices points (200–200000).
+- {"op":"setTrajectoryStyle","width":3,"color":"#hex","alpha":0.95}
+- {"op":"removeEntity","id":"apogee"}
+Use vizCommands when the user asks to mark something on the globe, move the camera, change trajectory appearance, or adjust map resolution.
 
 If no code needed: normal reply, no fences.
 `).trim();
@@ -21,6 +37,8 @@ const USER_AGENT_FOLLOWUP_SYSTEM_PROMPT = String(`
 Sandbox finished running your prior Python. The next user message is execution output (stdout/stderr/JSON).
 
 Reply in the user’s question language: interpret numbers and outcomes only. No markdown fences, no Python. Never mention /home/user, result.json, artifacts. On error: what failed and what to try next—in words only.
+
+If the run succeeded and the user asked for map markers/camera: say briefly that the 3D view should update (marker/label/camera)—do **not** offer standalone Cesium/JavaScript for them to paste manually.
 `).trim();
 
 const repoRoot = path.join(__dirname, "..", "..");
@@ -264,4 +282,9 @@ async function runSandboxChatSession(userId, openaiCfg, openAiMessages, aiParsed
   };
 }
 
-module.exports = { runSandboxChatSession, USER_AGENT_SYSTEM_PROMPT, USER_AGENT_FOLLOWUP_SYSTEM_PROMPT };
+module.exports = {
+  runSandboxChatSession,
+  runPythonInSandbox,
+  USER_AGENT_SYSTEM_PROMPT,
+  USER_AGENT_FOLLOWUP_SYSTEM_PROMPT,
+};

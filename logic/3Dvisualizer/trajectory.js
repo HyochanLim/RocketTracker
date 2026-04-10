@@ -5,6 +5,15 @@
  * Large logs: polyline with stride (max ~20k vertices) so the tab stays usable.
  */
 (function () {
+  function getMaxVerticesCap() {
+    var w =
+      typeof window !== "undefined" && window.__trackerTrajectoryMaxVertices != null
+        ? Number(window.__trackerTrajectoryMaxVertices)
+        : null;
+    if (w != null && Number.isFinite(w)) return Math.max(200, Math.min(200000, Math.floor(w)));
+    return 20000;
+  }
+
   function toNumber(value) {
     var n = Number(value);
     return Number.isFinite(n) ? n : null;
@@ -66,7 +75,7 @@
     var old = viewer.entities.getById("flight-trajectory-polyline");
     if (old) viewer.entities.remove(old);
 
-    var trailFlat = buildTrajectoryDegreesHeights(list, 20000);
+    var trailFlat = buildTrajectoryDegreesHeights(list, getMaxVerticesCap());
     if (trailFlat.length >= 6) {
       viewer.entities.add({
         id: "flight-trajectory-polyline",
