@@ -274,10 +274,15 @@ body.page-tracker {
   opacity: 0.9;
 }
 
+/* Keep CSS vars here; do NOT set display:flex on the base selector — it would override
+   .tracker-hidden-section { display: none } (lower specificity) and show the globe before Analyze. */
 .tracker-page .tracker-visualizer-section {
   margin-top: 0;
   --tracker-globe-h: min(77vh, 850px);
   --tracker-globe-w: calc(var(--tracker-globe-h) * 1.6180339887);
+}
+
+.tracker-page .tracker-visualizer-section:not(.tracker-hidden-section) {
   display: flex;
   flex-direction: column;
   align-items: center;
