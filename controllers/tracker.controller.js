@@ -11,10 +11,7 @@ const { buildParseInterpretation } = require("../logic/parsing/parse-interpretat
 const { storeAiParsedData, getAiParsedData } = require("../logic/aiAgent/agent");
 const { loadAiAgentConfig, resolveModels, resolveProviderConfig } = require("../util/ai-models");
 const layout = require("../util/user-data-layout");
-
-function isAjaxRequest(req) {
-  return req.xhr || req.get("X-Requested-With") === "XMLHttpRequest";
-}
+const { isAjaxRequest } = require("../util/http-request");
 
 function recordsFromParsedJsonPayload(parsed) {
   if (Array.isArray(parsed)) return parsed;

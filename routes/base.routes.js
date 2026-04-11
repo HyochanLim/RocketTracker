@@ -1,20 +1,22 @@
 const express = require("express");
-const baseController = require("../controllers/base.controller");
+const marketingController = require("../controllers/marketing.controller");
+const seoController = require("../controllers/seo.controller");
+const profileController = require("../controllers/profile.controller");
 const protectRoutes = require("../middlewares/protect-routes");
 const uploadAvatar = require("../middlewares/avatar-upload");
 
 const router = express.Router();
-router.get("/", baseController.getHome);
-router.get("/about", baseController.getAbout);
-router.get("/products", baseController.getProducts);
-router.get("/robots.txt", baseController.getRobots);
-router.get("/sitemap.xml", baseController.getSitemap);
-router.get("/pricing", baseController.getPricing);
-router.get("/resources", baseController.getResources);
-router.get("/contact", baseController.getContact);
-router.get("/download", baseController.getDownload);
-router.get("/profile", protectRoutes, baseController.redirectOwnProfile);
-router.get("/profile/:id", protectRoutes, baseController.getProfile);
-router.post("/profile/:id", protectRoutes, uploadAvatar.single("avatar-image"), baseController.updateProfile);
+router.get("/", marketingController.getHome);
+router.get("/about", marketingController.getAbout);
+router.get("/products", marketingController.getProducts);
+router.get("/robots.txt", seoController.getRobots);
+router.get("/sitemap.xml", seoController.getSitemap);
+router.get("/pricing", marketingController.getPricing);
+router.get("/resources", marketingController.getResources);
+router.get("/contact", marketingController.getContact);
+router.get("/download", marketingController.getDownload);
+router.get("/profile", protectRoutes, profileController.redirectOwnProfile);
+router.get("/profile/:id", protectRoutes, profileController.getProfile);
+router.post("/profile/:id", protectRoutes, uploadAvatar.single("avatar-image"), profileController.updateProfile);
 
 module.exports = router;

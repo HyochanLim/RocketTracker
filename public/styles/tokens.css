@@ -1,0 +1,113 @@
+:root {
+  color-scheme: dark;
+
+  /* Base */
+  --white: #ffffff;
+  --black: #000000;
+
+  /* Surfaces (navbar slightly darker than body for separation) */
+  --bg: #0a0a0a;
+  --bg-soft: #121212;
+  --header-surface: #000000;
+  --overlay-dark: rgba(0, 0, 0, 0.72);
+
+  /* Typography */
+  --text: var(--white);
+  --muted: rgba(255, 255, 255, 0.58);
+  --label: rgba(255, 255, 255, 0.78);
+  --text-accent: color-mix(in srgb, var(--accent) 82%, var(--white));
+
+  /* Borders & lines */
+  --line: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.22);
+  --line-accent-soft: rgba(var(--accent-rgb), 0.25);
+  --line-accent: rgba(var(--accent-rgb), 0.45);
+
+  /* Neon green — point / interactive */
+  --accent: #39ff14;
+  --accent-dim: #1faa0a;
+  --accent-deep: #0d3d07;
+  --accent-rgb: 57, 255, 20;
+  --accent-glow: rgba(var(--accent-rgb), 0.4);
+  --accent-glow-subtle: rgba(var(--accent-rgb), 0.12);
+  --accent-soft: var(--accent-deep);
+
+  /* Form surfaces */
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --input-bg-focus: rgba(255, 255, 255, 0.09);
+  --surface-elevated: rgba(255, 255, 255, 0.04);
+  --surface-hover: rgba(var(--accent-rgb), 0.1);
+  --dropdown-hover: rgba(var(--accent-rgb), 0.14);
+
+  /* Cards & chrome */
+  --card-tint-a: rgba(var(--accent-rgb), 0.08);
+  --card-tint-b: rgba(255, 255, 255, 0.04);
+  --shadow-deep: rgba(0, 0, 0, 0.45);
+  --btn-primary-shadow: rgba(var(--accent-rgb), 0.28);
+
+  /* Semantic */
+  --danger: #ff6b6b;
+  --danger-rgb: 255, 107, 107;
+  --danger-border: rgba(var(--danger-rgb), 0.55);
+  --danger-surface: rgba(var(--danger-rgb), 0.12);
+  --danger-text: #ffd4d4;
+
+  /* Special (kept subtle; use theme accent) */
+  --founder: rgba(var(--accent-rgb), 0.72);
+}
+
+@font-face {
+  font-family: "Open Sauce One";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300;
+  src: url("../fonts/open-sauce-one/open-sauce-one-latin-300-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sauce One";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("../fonts/open-sauce-one/open-sauce-one-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sauce One";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("../fonts/open-sauce-one/open-sauce-one-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sauce One";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("../fonts/open-sauce-one/open-sauce-one-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sauce One";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("../fonts/open-sauce-one/open-sauce-one-latin-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sauce One";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 800;
+  src: url("../fonts/open-sauce-one/open-sauce-one-latin-800-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sauce One";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url("../fonts/open-sauce-one/open-sauce-one-latin-900-normal.woff2") format("woff2");
+}

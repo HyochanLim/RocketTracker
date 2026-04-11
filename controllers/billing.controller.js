@@ -1,10 +1,7 @@
 const db = require("../data/database");
 const User = require("../models/user.model");
 const paypalService = require("../services/paypal.service");
-
-function isAjaxRequest(req) {
-  return req.xhr || req.get("X-Requested-With") === "XMLHttpRequest";
-}
+const { isAjaxRequest } = require("../util/http-request");
 
 function safeDateOrNull(v) {
   if (!v) return null;
