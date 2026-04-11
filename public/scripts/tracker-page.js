@@ -15,6 +15,7 @@
   var selectedSavedFileId = "";
   var warningTimer = null;
   var parseBanner = document.getElementById("tracker-parse-banner");
+  var parseModal = document.getElementById("tracker-parse-modal");
 
   function setAnalyzeLoading(active, message) {
     if (!analyzeLoading) return;
@@ -89,22 +90,28 @@
   }
 
   function hideParseBanner() {
-    if (!parseBanner) return;
-    parseBanner.innerHTML = "";
-    parseBanner.classList.add("tracker-hidden-section");
-    parseBanner.hidden = true;
+    if (parseBanner) parseBanner.innerHTML = "";
+    if (parseModal) {
+      parseModal.classList.add("tracker-hidden-section");
+      parseModal.hidden = true;
+      parseModal.setAttribute("aria-hidden", "true");
+    }
+    if (document.body) document.body.classList.remove("tracker-parse-modal-open");
   }
 
   /**
    * @param {object} interpretation - from server parseInterpretation (lines[], promptForUser, confidence)
    */
   function showParseInterpretation(interpretation) {
-    if (!parseBanner || !interpretation || !Array.isArray(interpretation.lines) || interpretation.lines.length === 0) {
+    if (!parseBanner || !parseModal || !interpretation || !Array.isArray(interpretation.lines) || interpretation.lines.length === 0) {
       hideParseBanner();
       return;
     }
-    parseBanner.hidden = false;
-    parseBanner.classList.remove("tracker-hidden-section");
+
+    parseModal.hidden = false;
+    parseModal.classList.remove("tracker-hidden-section");
+    parseModal.setAttribute("aria-hidden", "false");
+    if (document.body) document.body.classList.add("tracker-parse-modal-open");
 
     var esc = escapeHtml;
     var conf =
@@ -112,7 +119,7 @@
         ? Math.round(interpretation.confidence * 100)
         : null;
     var head =
-      '<p class="tracker-parse-banner-title">' +
+      '<p id="tracker-parse-banner-title" class="tracker-parse-banner-title">' +
       esc(interpretation.promptForUser || "Does this parsing look correct?") +
       (conf != null ? " <span class=\"tracker-parse-banner-conf\">(auto confidence ~" + conf + "%)</span>" : "") +
       "</p><ul class=\"tracker-parse-banner-list\">";
@@ -335,6 +342,17 @@
     });
   }
   if (showVisualizerButton) showVisualizerButton.addEventListener("click", handleAnalyzeClick);
+
+  if (parseModal) {
+    var parseBackdrop = parseModal.querySelector(".tracker-parse-modal-backdrop");
+    var parseClose = parseModal.querySelector(".tracker-parse-modal-close");
+    if (parseBackdrop) parseBackdrop.addEventListener("click", hideParseBanner);
+    if (parseClose) parseClose.addEventListener("click", hideParseBanner);
+  }
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key !== "Escape" || !parseModal || parseModal.hidden) return;
+    hideParseBanner();
+  });
 
   updateAnalyzeButtonVisibility();
 

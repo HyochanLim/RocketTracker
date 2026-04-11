@@ -72,13 +72,6 @@
         </div>
 
         <section id="trackerVisualizerSection" class="tracker-visualizer-section tracker-hidden-section">
-          <div
-            id="tracker-parse-banner"
-            class="tracker-parse-banner tracker-hidden-section"
-            role="status"
-            aria-live="polite"
-            hidden
-          ></div>
           <div class="tracker-visualizer-workbench" id="tracker-visualizer-workbench">
             <div class="tracker-visualizer-main">
               <div class="tracker-visualizer-map-slot">
@@ -126,6 +119,21 @@
             </div>
           </div>
         </section>
+
+        <div
+          id="tracker-parse-modal"
+          class="tracker-parse-modal tracker-hidden-section"
+          hidden
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="tracker-parse-banner-title"
+        >
+          <div class="tracker-parse-modal-backdrop" aria-hidden="true"></div>
+          <div class="tracker-parse-modal-panel">
+            <button type="button" class="tracker-parse-modal-close" aria-label="Close">&times;</button>
+            <div id="tracker-parse-banner" class="tracker-parse-banner" role="document"></div>
+          </div>
+        </div>
       </div>
 
       <script src="/public/scripts/tracker-page.js"></script>
