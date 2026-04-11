@@ -199,6 +199,9 @@ body.page-tracker {
 }
 
 .tracker-parse-banner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: min(100%, var(--tracker-globe-w));
   margin-top: 0.75rem;
   border: 1px solid var(--line-strong);
   background: rgba(255, 255, 255, 0.04);
@@ -273,12 +276,15 @@ body.page-tracker {
 
 .tracker-page .tracker-visualizer-section {
   margin-top: 0;
-}
-
-/* Map + agent: fixed-size globe (height × φ width); horizontal position eases when dock opens */
-.tracker-visualizer-workbench {
   --tracker-globe-h: min(77vh, 850px);
   --tracker-globe-w: calc(var(--tracker-globe-h) * 1.6180339887);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Map + agent: fixed-size globe (height × φ width); vars on .tracker-visualizer-section */
+.tracker-visualizer-workbench {
   --tracker-agent-col: min(380px, 34vw);
   --tracker-agent-dock-w: min(352px, 32vw);
   --tracker-agent-gap: 1rem;
@@ -1092,7 +1098,7 @@ body.page-tracker {
   display: none;
 }
 
-/* Cesium — fills map-slot: width = height × φ (vars on .tracker-visualizer-workbench) */
+/* Cesium — fills map-slot: width = height × φ (vars on .tracker-visualizer-section) */
 #cesiumContainer.tracker-visualizer-root {
   position: relative;
   border: none;
@@ -1159,6 +1165,10 @@ body.tracker-map-mode #trackerVisualizerSection {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  /* Same globe tile as map workbench (banner + map share width) */
+  --tracker-globe-h: min(77vh, 850px);
+  --tracker-globe-w: calc(var(--tracker-globe-h) * 1.6180339887);
 }
 
 body.tracker-map-mode .tracker-visualizer-workbench {
@@ -1166,9 +1176,6 @@ body.tracker-map-mode .tracker-visualizer-workbench {
   min-height: 0;
   height: 100%;
   align-items: stretch;
-  /* Fixed portrait tile: width = height × φ (do not stretch map to full viewport width) */
-  --tracker-globe-h: min(77vh, 850px);
-  --tracker-globe-w: calc(var(--tracker-globe-h) * 1.6180339887);
 }
 
 body.tracker-map-mode .tracker-visualizer-main {
@@ -1229,12 +1236,15 @@ body.tracker-map-mode #cesiumContainer.tracker-visualizer-root {
 }
 
 @media (max-width: 960px) {
+  body.tracker-map-mode #trackerVisualizerSection {
+    --tracker-globe-h: min(55vh, 550px);
+    --tracker-globe-w: calc(var(--tracker-globe-h) * 1.6180339887);
+  }
+
   body.tracker-map-mode .tracker-visualizer-workbench {
     flex-direction: column;
     align-items: stretch;
     min-height: 0;
-    --tracker-globe-h: min(55vh, 550px);
-    --tracker-globe-w: calc(var(--tracker-globe-h) * 1.6180339887);
   }
 
   body.tracker-map-mode .tracker-visualizer-main {
